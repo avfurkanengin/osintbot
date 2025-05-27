@@ -1,18 +1,38 @@
 import feedparser
-import openai
 import os
 import time
 import requests
+from bs4 import BeautifulSoup
+from googletrans import Translator  # Google Translate API (ücretsiz)
 
-# GİZLİ DEĞİŞKENLER
-openai.api_key = os.getenv("OPENAI_API_KEY")
+# 🔐 GİZLİ DEĞİŞKENLER
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 CHAT_ID = os.getenv("CHAT_ID")
 
-# RSS FEED
+# 📡 RSS FEED URL
 RSS_URL = "https://rsshub.app/telegram/channel/conflict_tr"
-CHECK_INTERVAL = 300  # 5 dakika
+CHECK_INTERVAL = 300  # saniye (5 dakika)
 
+# ✅ Çeviri Fonksiyonu (Google Translate ile)
+def translate_text(text):
+    try:
+        translator = Translator()
+        result = translator.translate(text, src='tr', dest='en')
+        return result.text
+    except Exception as e:
+        print("❌ Google Çeviri hatası:", e)
+        return "Translation failed."
+
+# 📬 Telegram'a mesaj gönderme
+def send_to_telegram(text):
+    try:
+        url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
+        data = {"chat_id": CHAT_ID, "text": text}
+        requests.post(url, data=data)
+    except Exception as e:
+        print("❌ Telegram gönderim hatası:", e)
+
+# 💾 Son görülen mesajı sakla / kontrol et
 def get_last_saved():
     try:
         with open("last.txt", "r") as f:
@@ -24,29 +44,16 @@ def save_last(entry_id):
     with open("last.txt", "w") as f:
         f.write(entry_id)
 
-def translate_text(text):
-    try:
-        prompt = f"Translate this Turkish news post to English:\n\n{text}"
-        response = openai.ChatCompletion.create(
-            model="gpt-4",
-            messages=[{"role": "user", "content": prompt}]
-        )
-        return response.choices[0].message.content.strip()
-    except Exception as e:
-        print("Çeviri hatası:", e)
-        return "Translation failed."
-
-def send_to_telegram(text):
-    try:
-        url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
-        data = {"chat_id": CHAT_ID, "text": text}
-        requests.post(url, data=data)
-    except Exception as e:
-        print("Telegram gönderim hatası:", e)
-
+# 🔁 Ana döngü
 def main():
     print("🔄 Telegram RSS kontrol ediliyor...")
-    feed = feedparser.parse(RSS_URL)
+
+    headers = {
+        "User-Agent": "Mozilla/5.0 (compatible; RSSBot/1.0)"
+    }
+    response = requests.get(RSS_URL, headers=headers)
+    feed = feedparser.parse(response.content)
+
     if not feed.entries:
         print("❌ Feed boş.")
         return
@@ -67,6 +74,7 @@ def main():
     else:
         print("🔁 Yeni mesaj yok.")
 
+# ⏱ Sürekli çalıştır
 if __name__ == "__main__":
     while True:
         main()
