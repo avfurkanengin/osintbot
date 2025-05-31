@@ -3,13 +3,27 @@ modules = ["python-3.11"]
 
 [nix]
 channel = "stable-24_05"
+packages = ["openssl"]
 
 [unitTest]
 language = "python3"
 
-[gitHubImport]
-requiredFiles = [".replit", "replit.nix"]
-
 [deployment]
 run = ["python3", "main.py"]
 deploymentTarget = "cloudrun"
+
+[workflows]
+runButton = "Run Bot"
+
+[[workflows.workflow]]
+name = "Run Bot"
+author = 43195367
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "python3 main.py"
+
+[[ports]]
+localPort = 8080
+externalPort = 80
