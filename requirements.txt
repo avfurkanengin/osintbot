@@ -1,0 +1,7 @@
+openai
+telethon
+tweepy
+requests
+Pillow
+numpy
+flask
