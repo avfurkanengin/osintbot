@@ -13,6 +13,8 @@ import csv
 from datetime import datetime
 import tweepy
 import os
+import functools
+print = functools.partial(print, flush=True)
 
 client = tweepy.Client(
     consumer_key=os.getenv("TWITTER_CONSUMER_KEY"),
