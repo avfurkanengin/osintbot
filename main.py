@@ -1,8 +1,5 @@
 # GPT-4o entegreli versiyon
 
-from keep_alive import keep_alive
-keep_alive()
-
 from telethon.sync import TelegramClient
 import openai
 import os
