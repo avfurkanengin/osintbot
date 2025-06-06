@@ -22,6 +22,14 @@ BOT_TOKEN = os.getenv("BOT_TOKEN")
 CHAT_ID = os.getenv("CHAT_ID")
 CSV_FILE = "gpt_full_log.csv"
 
+print("✅ Değişkenler alınıyor:")
+print(f"🔑 API_ID: {api_id}")
+print(f"🔑 API_HASH: {'VAR' if api_hash else 'YOK'}")
+print(f"🔑 OPENAI_API_KEY: {'VAR' if openai.api_key else 'YOK'}")
+print(f"🔑 BOT_TOKEN: {'VAR' if BOT_TOKEN else 'YOK'}")
+print(f"🔑 CHAT_ID: {CHAT_ID}")
+
+
 # 🧠 Eğer .session dosyası yoksa, secret'tan üret
 if not os.path.exists("multi_session.session"):
     print("📦 Session dosyası yazılıyor (base64)...")
@@ -69,7 +77,7 @@ def log_gpt_interaction(stage, date, channel, text, sent, usage):
                 getattr(usage, 'total_tokens', '-') if usage else '-'
             ])
     except Exception as e:
-        print("[LOG ERROR]", e)
+        print("[LOG ERROR] CSV yazma hatası:", e)
 
 def remove_hashtags(text):
     return re.sub(r"#\S+\s*", "", text)
