@@ -41,14 +41,22 @@ if not os.path.exists("multi_session.session"):
     else:
         print("❌ SESSION_B64 bulunamadı, oturum dosyası oluşturulamaz!")
 
-client = TelegramClient("multi_session", api_id, api_hash)
-client.connect()
-print("📡 Telegram bağlantısı kuruldu, yetki kontrolü yapılıyor...")
-if not client.is_user_authorized():
+# Temizlik: railway yeniden başlatıldığında bazen lock kalıyor
+try:
+    os.remove("multi_session.session-journal")
+except FileNotFoundError:
+    pass
+
+telegram_client = TelegramClient("multi_session", api_id, api_hash)
+
+print("📡 Telegram bağlantısı kuruluyor...")
+if not telegram_client.is_connected():
+    telegram_client.connect()
+
+if not telegram_client.is_user_authorized():
     print("❌ Telegram istemcisi yetkili değil! Railway üzerinde numara girilemez.")
     exit()
-else:
-    print("✅ Telegram oturumu aktif.\n")
+print("✅ Telegram oturumu aktif.\n")
 
 channel_usernames = {
     'conflict_tr': {'lang': 'tr', 'allowed_senders': ['ConflictTR']},
@@ -161,78 +169,77 @@ def main():
     print("🚀 Bot çalışmaya başladı. Kanallar taranıyor...\n")
     while True:
         try:
-            with TelegramClient('multi_session', api_id, api_hash) as telegram_client:
-                print("[INFO] Kanallar kontrol ediliyor...")
-                sent_hashes = get_sent_hashes()
-                new_messages = 0
+            print("[INFO] Kanallar kontrol ediliyor...")
+            sent_hashes = get_sent_hashes()
+            new_messages = 0
 
-                for channel, info in channel_usernames.items():
-                    allowed_senders = info['allowed_senders']
-                    print(f"[INFO] Kanal: {channel}")
+            for channel, info in channel_usernames.items():
+                allowed_senders = info['allowed_senders']
+                print(f"[INFO] Kanal: {channel}")
 
-                    for message in telegram_client.iter_messages(channel, limit=4):
-                        if not message.text or not message.sender:
-                            continue
+                for message in telegram_client.iter_messages(channel, limit=4):
+                    if not message.text or not message.sender:
+                        continue
 
-                        sender_name = getattr(message.sender, 'first_name', '') or getattr(message.sender, 'title', '')
-                        if sender_name not in allowed_senders:
-                            print(f"[SKIP] Filtreden geçmedi: {sender_name}")
-                            continue
+                    sender_name = getattr(message.sender, 'first_name', '') or getattr(message.sender, 'title', '')
+                    if sender_name not in allowed_senders:
+                        print(f"[SKIP] Filtreden geçmedi: {sender_name}")
+                        continue
 
-                        raw_text = message.text.strip()
-                        lower_text = raw_text.lower()
+                    raw_text = message.text.strip()
+                    lower_text = raw_text.lower()
 
-                        if any(keyword in lower_text for keyword in BLOCKED_KEYWORDS):
-                            print("[SKIP] Yasaklı içerik, atlanıyor.")
-                            continue
+                    if any(keyword in lower_text for keyword in BLOCKED_KEYWORDS):
+                        print("[SKIP] Yasaklı içerik, atlanıyor.")
+                        continue
 
-                        if re.search(r"https?://\S+", raw_text) or any(e in raw_text for e in BLOCKED_EMOJIS):
-                            print("[SKIP] Uygunsuz içerik, atlanıyor.")
-                            continue
+                    if re.search(r"https?://\S+", raw_text) or any(e in raw_text for e in BLOCKED_EMOJIS):
+                        print("[SKIP] Uygunsuz içerik, atlanıyor.")
+                        continue
 
-                        current_hash = hashlib.md5((channel + raw_text).encode()).hexdigest()
-                        if current_hash in sent_hashes:
-                            print("[DUPLICATE] Zaten gönderilmiş, atlanıyor.")
-                            continue
+                    current_hash = hashlib.md5((channel + raw_text).encode()).hexdigest()
+                    if current_hash in sent_hashes:
+                        print("[DUPLICATE] Zaten gönderilmiş, atlanıyor.")
+                        continue
 
-                        cleaned = remove_hashtags(raw_text)
-                        translated, usage = translate_if_geopolitical(cleaned)
-                        if translated.upper() == "SKIP":
-                            print("[SKIP] GPT 'SKIP' dedi.")
-                            log_gpt_interaction("Translate & Filter", datetime.now().strftime("%Y-%m-%d %H:%M"), channel, cleaned, False, usage)
-                            continue
+                    cleaned = remove_hashtags(raw_text)
+                    translated, usage = translate_if_geopolitical(cleaned)
+                    if translated.upper() == "SKIP":
+                        print("[SKIP] GPT 'SKIP' dedi.")
+                        log_gpt_interaction("Translate & Filter", datetime.now().strftime("%Y-%m-%d %H:%M"), channel, cleaned, False, usage)
+                        continue
 
-                        tweet_url = "https://twitter.com/intent/tweet?text=" + requests.utils.quote(translated)
-                        final_message = f"{translated}\n\n🔗 Post on Twitter: {tweet_url}"
+                    tweet_url = "https://twitter.com/intent/tweet?text=" + requests.utils.quote(translated)
+                    final_message = f"{translated}\n\n🔗 Post on Twitter: {tweet_url}"
 
-                        media_path = None
-                        is_video = False
+                    media_path = None
+                    is_video = False
 
-                        if message.video:
-                            try:
-                                media_path = telegram_client.download_media(message.video)
-                                is_video = True
-                            except Exception as e:
-                                print("[WARN] Video indirilemedi:", e)
-                        elif message.photo:
-                            try:
-                                media_path = telegram_client.download_media(message.photo)
-                                if is_image_red_or_black_heavy(media_path):
-                                    print("[SKIP] Görselde kırmızı/siyah baskın. Atlanıyor.")
-                                    continue
-                            except Exception as e:
-                                print("[WARN] Fotoğraf indirilemedi:", e)
+                    if message.video:
+                        try:
+                            media_path = telegram_client.download_media(message.video)
+                            is_video = True
+                        except Exception as e:
+                            print("[WARN] Video indirilemedi:", e)
+                    elif message.photo:
+                        try:
+                            media_path = telegram_client.download_media(message.photo)
+                            if is_image_red_or_black_heavy(media_path):
+                                print("[SKIP] Görselde kırmızı/siyah baskın. Atlanıyor.")
+                                continue
+                        except Exception as e:
+                            print("[WARN] Fotoğraf indirilemedi:", e)
 
-                        print("[SEND] Gönderiliyor:\n", final_message)
-                        send_to_telegram(final_message, media_path, is_video=is_video)
-                        save_sent_hash(current_hash)
-                        log_gpt_interaction("Final", datetime.now().strftime("%Y-%m-%d %H:%M"), channel, cleaned, True, usage)
+                    print("[SEND] Gönderiliyor:\n", final_message)
+                    send_to_telegram(final_message, media_path, is_video=is_video)
+                    save_sent_hash(current_hash)
+                    log_gpt_interaction("Final", datetime.now().strftime("%Y-%m-%d %H:%M"), channel, cleaned, True, usage)
 
-                        new_messages += 1
-                        time.sleep(20)
+                    new_messages += 1
+                    time.sleep(20)
 
-                if new_messages == 0:
-                    print("[INFO] Yeni mesaj bulunamadı.")
+            if new_messages == 0:
+                print("[INFO] Yeni mesaj bulunamadı.")
         except Exception as e:
             print("❌ Genel hata:", e)
             traceback.print_exc()
