@@ -1,20 +1,21 @@
+from telethon.sync import TelegramClient
+import openai
 import os
-import base64
 import re
 import requests
 import hashlib
 import time
-import csv
-from datetime import datetime
 from PIL import Image
 import numpy as np
+import csv
+from datetime import datetime
 import functools
-from telethon.sync import TelegramClient
-import openai
+import base64
+import traceback
 
 print = functools.partial(print, flush=True)
 
-# 🔐 Railway Secrets'tan API bilgileri alınır
+# Environment variables
 api_id = int(os.getenv("API_ID"))
 api_hash = os.getenv("API_HASH")
 openai.api_key = os.getenv("OPENAI_API_KEY")
@@ -22,28 +23,32 @@ BOT_TOKEN = os.getenv("BOT_TOKEN")
 CHAT_ID = os.getenv("CHAT_ID")
 CSV_FILE = "gpt_full_log.csv"
 
-print("✅ Değişkenler alınıyor:")
+print("\n✅ Değişkenler alınıyor:")
 print(f"🔑 API_ID: {api_id}")
 print(f"🔑 API_HASH: {'VAR' if api_hash else 'YOK'}")
 print(f"🔑 OPENAI_API_KEY: {'VAR' if openai.api_key else 'YOK'}")
 print(f"🔑 BOT_TOKEN: {'VAR' if BOT_TOKEN else 'YOK'}")
-print(f"🔑 CHAT_ID: {CHAT_ID}")
+print(f"🔑 CHAT_ID: {CHAT_ID}\n")
 
-
-# 🧠 Eğer .session dosyası yoksa, secret'tan üret
+# Session setup
 if not os.path.exists("multi_session.session"):
-    print("📦 Session dosyası yazılıyor (base64)...")
+    print("📦 Session dosyası bulunamadı, base64'ten yazılıyor...")
     session_b64 = os.getenv("SESSION_B64")
     if session_b64:
+        print("✅ SESSION_B64 değişkeni bulundu, decode ediliyor.")
         with open("multi_session.session", "wb") as f:
             f.write(base64.b64decode(session_b64))
+    else:
+        print("❌ SESSION_B64 bulunamadı, oturum dosyası oluşturulamaz!")
 
-# 🧠 Telegram istemcisi başlatılır
 client = TelegramClient("multi_session", api_id, api_hash)
 client.connect()
+print("📡 Telegram bağlantısı kuruldu, yetki kontrolü yapılıyor...")
 if not client.is_user_authorized():
-    print("❌ Geçerli oturum bulunamadı. Railway'de telefon doğrulaması yapılamaz.")
+    print("❌ Telegram istemcisi yetkili değil! Railway üzerinde numara girilemez.")
     exit()
+else:
+    print("✅ Telegram oturumu aktif.\n")
 
 channel_usernames = {
     'conflict_tr': {'lang': 'tr', 'allowed_senders': ['ConflictTR']},
@@ -107,6 +112,17 @@ def translate_if_geopolitical(text):
         print("[GPT TRANSLATE ERROR]", e)
         return "", None
 
+def get_sent_hashes():
+    try:
+        with open("sent_hashes.txt", "r") as f:
+            return set(f.read().splitlines())
+    except FileNotFoundError:
+        return set()
+
+def save_sent_hash(content_hash):
+    with open("sent_hashes.txt", "a") as f:
+        f.write(content_hash + "\n")
+
 def send_to_telegram(text, media_path=None, is_video=False):
     try:
         if media_path:
@@ -127,17 +143,6 @@ def send_to_telegram(text, media_path=None, is_video=False):
     except Exception as e:
         print("❌ Telegram API hatası:", e)
 
-def get_sent_hashes():
-    try:
-        with open("sent_hashes.txt", "r") as f:
-            return set(f.read().splitlines())
-    except FileNotFoundError:
-        return set()
-
-def save_sent_hash(content_hash):
-    with open("sent_hashes.txt", "a") as f:
-        f.write(content_hash + "\n")
-
 def is_image_red_or_black_heavy(image_path, threshold=0.7):
     try:
         image = Image.open(image_path).convert('RGB')
@@ -153,10 +158,11 @@ def is_image_red_or_black_heavy(image_path, threshold=0.7):
         return False
 
 def main():
+    print("🚀 Bot çalışmaya başladı. Kanallar taranıyor...\n")
     while True:
         try:
             with TelegramClient('multi_session', api_id, api_hash) as telegram_client:
-                print("[INFO] Kanallar kontrol ediliyor...\n")
+                print("[INFO] Kanallar kontrol ediliyor...")
                 sent_hashes = get_sent_hashes()
                 new_messages = 0
 
@@ -229,6 +235,7 @@ def main():
                     print("[INFO] Yeni mesaj bulunamadı.")
         except Exception as e:
             print("❌ Genel hata:", e)
+            traceback.print_exc()
 
         print("[WAIT] 5 dakika bekleniyor...\n")
         time.sleep(300)
