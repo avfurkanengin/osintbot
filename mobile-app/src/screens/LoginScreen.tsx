@@ -16,7 +16,7 @@ const LoginScreen = ({ navigation }) => {
     setLoading(true);
     setError('');
     try {
-      const apiUrl = state.apiUrl || 'http://localhost:5000';  // Use context API URL or default
+      const apiUrl = state.apiUrl || 'https://web-production-a5f83.up.railway.app';  // Use context API URL or default
       const response = await fetch(`${apiUrl}/api/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

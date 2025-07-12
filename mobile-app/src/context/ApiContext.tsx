@@ -72,7 +72,7 @@ const initialState: ApiState = {
   stats: null,
   loading: false,
   error: null,
-  apiUrl: 'http://localhost:5000', // Default API URL
+  apiUrl: 'https://web-production-a5f83.up.railway.app', // Default API URL
 };
 
 const apiReducer = (state: ApiState, action: ApiAction): ApiState => {

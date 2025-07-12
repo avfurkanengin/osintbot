@@ -159,7 +159,7 @@ const SettingsScreen: React.FC = () => {
                 'notifications',
                 'autoRefresh',
               ]);
-              setApiUrlInput('http://localhost:5000');
+              setApiUrlInput('https://web-production-a5f83.up.railway.app');
               setNotifications(true);
               setAutoRefresh(true);
               Alert.alert('Success', 'Settings reset successfully');
@@ -425,7 +425,7 @@ const SettingsScreen: React.FC = () => {
               label="API URL"
               value={apiUrlInput}
               onChangeText={setApiUrlInput}
-              placeholder="http://localhost:5000"
+              placeholder="https://web-production-a5f83.up.railway.app"
               mode="outlined"
               style={styles.input}
             />
