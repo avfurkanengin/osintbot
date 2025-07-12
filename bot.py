@@ -165,7 +165,15 @@ def process_channel(client, channel, info, sent_hashes):
         # Check if message is too recent (within last 1 minute) to prevent rapid processing
         message_date = message.date
         if message_date:
-            now = datetime.now(tz=message_date.tzinfo) if message_date.tzinfo else datetime.now()
+            # Ensure both times are in UTC for proper comparison
+            if message_date.tzinfo is None:
+                # If message date has no timezone info, assume UTC
+                message_date = message_date.replace(tzinfo=timezone.utc)
+            else:
+                # Convert to UTC if it has timezone info
+                message_date = message_date.astimezone(timezone.utc)
+            
+            now = datetime.now(timezone.utc)
             time_diff = now - message_date
             if time_diff.total_seconds() < 60:  # 1 minute
                 print(f"[SKIP] Message too recent ({time_diff.total_seconds():.0f}s ago), skipping to prevent duplicates")
@@ -208,7 +216,7 @@ def process_channel(client, channel, info, sent_hashes):
         # Check if translation failed or returned empty
         if not translated or translated.upper() == "SKIP":
             print("[SKIP] GPT 'SKIP' dedi veya çeviri başarısız.")
-            log_gpt_interaction(CSV_FILE, "Translate & Filter", datetime.now().strftime("%Y-%m-%d %H:%M"), channel, cleaned, False, usage)
+            log_gpt_interaction(CSV_FILE, "Translate & Filter", datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M"), channel, cleaned, False, usage)
             
             # Still save to database as rejected content
             post_data = {
@@ -277,7 +285,7 @@ def process_channel(client, channel, info, sent_hashes):
             # Update status to posted
             db.update_post_status(post_id, 'posted')
             
-            log_gpt_interaction(CSV_FILE, "Final", datetime.now().strftime("%Y-%m-%d %H:%M"), channel, cleaned, True, usage)
+            log_gpt_interaction(CSV_FILE, "Final", datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M"), channel, cleaned, True, usage)
 
             # Add delay to prevent rapid duplicate processing
             print("[WAIT] Waiting 10 seconds before processing next message...")

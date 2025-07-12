@@ -1,6 +1,6 @@
 import sqlite3
 import json
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import List, Dict, Optional, Any
 import logging
 import werkzeug.security as security
@@ -312,7 +312,7 @@ class DatabaseManager:
         cursor = conn.cursor()
         
         # Get date range
-        end_date = datetime.now()
+        end_date = datetime.now(timezone.utc)
         start_date = end_date - timedelta(days=days)
         
         analytics = {}
@@ -379,7 +379,7 @@ class DatabaseManager:
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
         
-        cutoff_date = datetime.now() - timedelta(days=days)
+        cutoff_date = datetime.now(timezone.utc) - timedelta(days=days)
         
         # Archive old posts instead of deleting
         cursor.execute('''

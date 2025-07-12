@@ -2,7 +2,7 @@ from flask import Flask, request, jsonify, send_file, Response, redirect
 from flask_cors import CORS
 import os
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Dict, Any, List, Optional, Union
 import json
 from database import DatabaseManager
@@ -57,7 +57,7 @@ def health_check():
     """Health check endpoint"""
     return jsonify({
         'status': 'healthy',
-        'timestamp': datetime.now().isoformat(),
+        'timestamp': datetime.now(timezone.utc).isoformat(),
         'version': '1.0.0'
     })
 
@@ -67,7 +67,7 @@ def test_endpoint():
     return jsonify({
         'status': 'ok',
         'message': 'API server is running',
-        'timestamp': datetime.now().isoformat()
+        'timestamp': datetime.now(timezone.utc).isoformat()
     })
 
 @app.route('/api/posts', methods=['GET'])
