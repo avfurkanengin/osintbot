@@ -64,11 +64,12 @@ def run_api_server():
         )
         
         # Log API server output
-        for line in iter(api_process.stdout.readline, ''):
-            if line.strip():
-                logger.info(f"[API] {line.strip()}")
-            if shutdown_flag:
-                break
+        if api_process.stdout:
+            for line in iter(api_process.stdout.readline, ''):
+                if line.strip():
+                    logger.info(f"[API] {line.strip()}")
+                if shutdown_flag:
+                    break
                 
         api_process.wait()
         
@@ -93,11 +94,12 @@ def run_telegram_bot():
         )
         
         # Log bot output
-        for line in iter(bot_process.stdout.readline, ''):
-            if line.strip():
-                logger.info(f"[BOT] {line.strip()}")
-            if shutdown_flag:
-                break
+        if bot_process.stdout:
+            for line in iter(bot_process.stdout.readline, ''):
+                if line.strip():
+                    logger.info(f"[BOT] {line.strip()}")
+                if shutdown_flag:
+                    break
                 
         bot_process.wait()
         
