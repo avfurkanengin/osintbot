@@ -10,3 +10,4 @@ flask-cors==4.0.0
 flask-jwt-extended==4.5.3
 flask-limiter==3.5.0
 werkzeug==2.3.7
+# Force rebuild for Railway deployment
