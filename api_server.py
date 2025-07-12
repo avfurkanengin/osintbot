@@ -61,6 +61,15 @@ def health_check():
         'version': '1.0.0'
     })
 
+@app.route('/api/test', methods=['GET'])
+def test_endpoint():
+    """Simple test endpoint without authentication"""
+    return jsonify({
+        'status': 'ok',
+        'message': 'API server is running',
+        'timestamp': datetime.now().isoformat()
+    })
+
 @app.route('/api/posts', methods=['GET'])
 @jwt_required()
 @limiter.limit("100 per minute")

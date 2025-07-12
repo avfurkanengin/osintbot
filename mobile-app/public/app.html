@@ -603,7 +603,10 @@
     <script>
         // Global state
         let currentTab = 'confirmed';
-        let apiUrl = 'http://127.0.0.1:5000';
+        // Auto-detect API URL for Railway deployment
+        let apiUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
+            ? 'http://127.0.0.1:5000' 
+            : window.location.origin;
         let confirmedPosts = [];
         let rejectedPosts = [];
         let stats = {};
@@ -620,6 +623,10 @@
                 window.location.href = '../../test-login.html';
                 return;
             }
+            
+            // Log API URL for debugging
+            console.log('API URL:', apiUrl);
+            console.log('Current location:', window.location.href);
             
             loadConfirmedPosts();
             loadRejectedPosts();
@@ -658,8 +665,11 @@
             try {
                 // Get JWT token from localStorage
                 const token = localStorage.getItem('jwt_token');
+                const fullUrl = apiUrl + endpoint;
                 
-                const response = await fetch(apiUrl + endpoint, {
+                console.log('Making API call to:', fullUrl);
+                
+                const response = await fetch(fullUrl, {
                     ...options,
                     headers: {
                         'Content-Type': 'application/json',
@@ -674,7 +684,7 @@
                 
                 return await response.json();
             } catch (error) {
-                console.error('API Error:', error);
+                console.error('API Error for endpoint:', endpoint, error);
                 throw error;
             }
         }
@@ -1232,6 +1242,13 @@
             statusEl.textContent = 'Testing...';
             
             try {
+                // First test without authentication
+                const testResponse = await fetch(apiUrl + '/api/test');
+                if (!testResponse.ok) {
+                    throw new Error(`Server test failed: ${testResponse.status}`);
+                }
+                
+                // Then test with authentication
                 const response = await apiCall('/api/health');
                 statusEl.textContent = 'Connected ✓';
                 statusEl.style.color = '#4caf50';
