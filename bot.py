@@ -3,7 +3,7 @@ import hashlib
 import time
 import traceback
 import os
-from datetime import datetime
+from datetime import datetime, timezone
 from telethon.sync import TelegramClient
 from config import *
 from utils import *
@@ -165,7 +165,8 @@ def process_channel(client, channel, info, sent_hashes):
         # Check if message is too recent (within last 5 minutes) to prevent rapid processing
         message_date = message.date
         if message_date:
-            time_diff = datetime.now() - message_date
+            now = datetime.now(tz=message_date.tzinfo) if message_date.tzinfo else datetime.now()
+            time_diff = now - message_date
             if time_diff.total_seconds() < 300:  # 5 minutes
                 print(f"[SKIP] Message too recent ({time_diff.total_seconds():.0f}s ago), skipping to prevent duplicates")
                 continue
