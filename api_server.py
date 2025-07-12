@@ -2,7 +2,7 @@ from flask import Flask, request, jsonify, send_file, Response
 from flask_cors import CORS
 import os
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Dict, Any, List, Optional, Union
 import json
 from database import DatabaseManager
@@ -17,6 +17,7 @@ logger = logging.getLogger(__name__)
 app = Flask(__name__)
 CORS(app)  # Enable CORS for mobile app
 app.config['JWT_SECRET_KEY'] = os.getenv('JWT_SECRET_KEY', 'your-secret-key')  # Change this in production!
+app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(days=7)  # Token expires in 7 days
 jwt = JWTManager(app)
 
 # Initialize database
@@ -38,6 +39,7 @@ def login():
     if not user or not db.verify_password(user['password_hash'], data['password']):
         return jsonify({'success': False, 'message': 'Invalid credentials'}), 401
     
+    # Create token with 7-day expiration
     access_token = create_access_token(identity=user['username'])
     return jsonify({
         'success': True,
@@ -573,15 +575,7 @@ def serve_web_app():
             <button class="login-button" type="submit">Login</button>
         </form>
         
-        <div id="message" class="message" style="display: none;"></div>
-        
-        <div class="credentials-hint">
-            <h3>Available Accounts:</h3>
-            <p>AdminFurkan / Furkan123</p>
-            <p>AdminKayra / Kayra123</p>
-            <p>AdminDogukan / Dogukan123</p>
-            <p>AdminTest / Test123</p>
-        </div>
+                 <div id="message" class="message" style="display: none;"></div>
     </div>
 
     <script>
