@@ -378,27 +378,15 @@ def serve_header():
 @app.route('/', methods=['GET'])
 @limiter.limit("10 per minute")
 def serve_web_app():
-    """Serve the web app or login page"""
+    """Serve the unified web app that handles both login and dashboard"""
     try:
-        # Check if user is authenticated
-        try:
-            from flask_jwt_extended import verify_jwt_in_request
-            verify_jwt_in_request()
-            # User is authenticated, serve the main app
-            app_path = 'mobile-app/public/app.html'
-            if os.path.exists(app_path):
-                return send_file(app_path)
-            else:
-                return jsonify({'error': 'Web app not found'}), 404
-        except:
-            # User is not authenticated, serve login page with existing design
-            login_html = '''
+        unified_html = '''
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>the Pulse - Login</title>
+    <title>the Pulse - Geopolitics</title>
     <style>
         * {
             margin: 0;
@@ -411,15 +399,18 @@ def serve_web_app():
             background-color: #121212;
             color: #ffffff;
             overflow-x: hidden;
+        }
+        
+        /* Login Screen Styles */
+        .login-screen {
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
         }
         
-        /* Mobile-like container for desktop */
         @media (min-width: 768px) {
-            body {
+            .login-screen {
                 background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
                 padding: 20px;
             }
@@ -531,54 +522,141 @@ def serve_web_app():
             border-left: 4px solid #4caf50;
         }
         
-        .credentials-hint {
-            margin-top: 24px;
-            padding: 16px;
-            background: #1e1e1e;
-            border-radius: 8px;
-            border: 1px solid #333333;
+        /* Dashboard Styles */
+        .dashboard-screen {
+            display: none;
+            width: 100%;
+            height: 100vh;
         }
         
-        .credentials-hint h3 {
-            color: #ffffff;
-            margin-bottom: 12px;
-            font-size: 14px;
-            font-weight: 600;
+        .loading-screen {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            flex-direction: column;
         }
         
-        .credentials-hint p {
-            color: #cccccc;
-            font-size: 12px;
-            margin-bottom: 6px;
-            font-family: monospace;
+        .loading-spinner {
+            border: 3px solid #333333;
+            border-top: 3px solid #2196F3;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .hidden {
+            display: none !important;
         }
     </style>
 </head>
 <body>
-    <div class="login-container">
-        <div class="login-header">
-            <h1 class="login-title">the Pulse</h1>
-            <p class="login-subtitle">Geopolitics</p>
+    <!-- Loading Screen -->
+    <div id="loadingScreen" class="loading-screen">
+        <div class="loading-spinner"></div>
+        <p>Loading...</p>
+    </div>
+    
+    <!-- Login Screen -->
+    <div id="loginScreen" class="login-screen hidden">
+        <div class="login-container">
+            <div class="login-header">
+                <h1 class="login-title">the Pulse</h1>
+                <p class="login-subtitle">Geopolitics</p>
+            </div>
+            
+            <form id="loginForm">
+                <div class="form-group">
+                    <label class="form-label" for="username">ID</label>
+                    <input class="form-input" type="text" id="username" name="username" required>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="password">Password</label>
+                    <input class="form-input" type="password" id="password" name="password" required>
+                </div>
+                
+                <button class="login-button" type="submit">Login</button>
+            </form>
+            
+            <div id="message" class="message" style="display: none;"></div>
         </div>
-        
-        <form id="loginForm">
-            <div class="form-group">
-                <label class="form-label" for="username">ID</label>
-                <input class="form-input" type="text" id="username" name="username" required>
-            </div>
-            
-            <div class="form-group">
-                <label class="form-label" for="password">Password</label>
-                <input class="form-input" type="password" id="password" name="password" required>
-            </div>
-            
-            <button class="login-button" type="submit">Login</button>
-        </form>
-        
-                 <div id="message" class="message" style="display: none;"></div>
+    </div>
+    
+    <!-- Dashboard Screen -->
+    <div id="dashboardScreen" class="dashboard-screen">
+        <iframe id="dashboardFrame" src="" width="100%" height="100%" frameborder="0"></iframe>
     </div>
 
     <script>
+        // Check authentication status on page load
+        window.addEventListener('load', function() {
+            checkAuthAndLoadContent();
+        });
+        
+        async function checkAuthAndLoadContent() {
+            const token = localStorage.getItem('jwt_token');
+            
+            if (!token) {
+                // No token, show login screen
+                showLoginScreen();
+                return;
+            }
+            
+            try {
+                // Verify token with server
+                const response = await fetch('/api/health', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                if (response.ok) {
+                    // Token is valid, load dashboard
+                    loadDashboard();
+                } else {
+                    // Token is invalid, remove it and show login
+                    localStorage.removeItem('jwt_token');
+                    localStorage.removeItem('user_info');
+                    showLoginScreen();
+                }
+            } catch (error) {
+                console.error('Auth check failed:', error);
+                showLoginScreen();
+            }
+        }
+        
+        function showLoginScreen() {
+            document.getElementById('loadingScreen').classList.add('hidden');
+            document.getElementById('loginScreen').classList.remove('hidden');
+            document.getElementById('dashboardScreen').classList.add('hidden');
+        }
+        
+        function loadDashboard() {
+            document.getElementById('loadingScreen').classList.add('hidden');
+            document.getElementById('loginScreen').classList.add('hidden');
+            document.getElementById('dashboardScreen').classList.remove('hidden');
+            
+            // Load the dashboard content
+            fetch('/dashboard')
+                .then(response => response.text())
+                .then(html => {
+                    document.getElementById('dashboardScreen').innerHTML = html;
+                })
+                .catch(error => {
+                    console.error('Failed to load dashboard:', error);
+                    showLoginScreen();
+                });
+        }
+        
+        // Handle login form submission
         document.getElementById('loginForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             
@@ -609,13 +687,13 @@ def serve_web_app():
                     localStorage.setItem('user_info', JSON.stringify(data.user));
                     
                     // Show success message
-                    messageDiv.textContent = 'Login successful! Redirecting...';
+                    messageDiv.textContent = 'Login successful! Loading dashboard...';
                     messageDiv.className = 'message success';
                     messageDiv.style.display = 'block';
                     
-                    // Redirect to dashboard
+                    // Load dashboard
                     setTimeout(() => {
-                        window.location.href = '/';
+                        loadDashboard();
                     }, 1000);
                 } else {
                     // Show error message
@@ -637,13 +715,28 @@ def serve_web_app():
     </script>
 </body>
 </html>
-            '''
-            from flask import Response
-            return Response(login_html, mimetype='text/html')
+        '''
+        from flask import Response
+        return Response(unified_html, mimetype='text/html')
             
     except Exception as e:
         logger.error(f"Error serving web app: {e}")
         return jsonify({'error': 'Failed to serve web app'}), 500
+
+@app.route('/dashboard', methods=['GET'])
+@jwt_required()
+@limiter.limit("10 per minute")
+def serve_dashboard():
+    """Serve the dashboard content"""
+    try:
+        app_path = 'mobile-app/public/app.html'
+        if os.path.exists(app_path):
+            return send_file(app_path)
+        else:
+            return jsonify({'error': 'Dashboard not found'}), 404
+    except Exception as e:
+        logger.error(f"Error serving dashboard: {e}")
+        return jsonify({'error': 'Failed to serve dashboard'}), 500
 
 @app.route('/api/cleanup', methods=['POST'])
 @jwt_required()
