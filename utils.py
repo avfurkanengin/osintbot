@@ -4,7 +4,7 @@ import os
 from datetime import datetime
 import requests
 from PIL import Image
-import numpy as np
+# Removed numpy dependency - using PIL only for image processing
 import re
 
 def get_sent_hashes(file_path="sent_hashes.txt"):
@@ -80,10 +80,25 @@ def is_image_red_or_black_heavy(image_path, threshold=0.7):
     try:
         image = Image.open(image_path).convert('RGB')
         image = image.resize((100, 100))
-        data = np.array(image)
-        total_pixels = data.shape[0] * data.shape[1]
-        red_pixels = np.sum((data[:,:,0] > 150) & (data[:,:,1] < 80) & (data[:,:,2] < 80))
-        black_pixels = np.sum((data[:,:,0] < 50) & (data[:,:,1] < 50) & (data[:,:,2] < 50))
+        
+        # Count pixels using PIL without numpy
+        total_pixels = image.width * image.height
+        red_pixels = 0
+        black_pixels = 0
+        
+        # Iterate through pixels
+        for x in range(image.width):
+            for y in range(image.height):
+                r, g, b = image.getpixel((x, y))
+                
+                # Check for red pixels (high red, low green/blue)
+                if r > 150 and g < 80 and b < 80:
+                    red_pixels += 1
+                
+                # Check for black pixels (all values low)
+                elif r < 50 and g < 50 and b < 50:
+                    black_pixels += 1
+        
         ratio = (red_pixels + black_pixels) / total_pixels
         return ratio >= threshold
     except Exception as e:
