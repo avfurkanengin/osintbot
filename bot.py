@@ -75,7 +75,6 @@ def calculate_content_quality(text, sender_name="", channel=""):
 def calculate_bias_score(text):
     """Calculate bias score (0 = neutral, 1 = highly biased)"""
     bias_terms = [
-        'zionist', 'siyonist', 'zionism', 'siyonizm', 'zionist regime', 'sionist',
         'puppet government', 'puppet regime', 'puppet state',
         'evil empire', 'axis of evil', 'terrorist state', 'rogue state',
         'nazi', 'fascist', 'terrorist regime', 'dictator regime'
@@ -92,7 +91,7 @@ def translate_if_geopolitical(text):
         "Guidelines:\n"
         "- Start with country flag emoji 🌍 or specific country flag\n"
         "- Stay neutral and factual\n"
-        "- Remove biased terms like 'zionist', 'puppet government', 'evil empire'\n"
+        "- Remove extreme biased terms like 'puppet government', 'evil empire'\n"
         "- Use neutral terms: 'government', 'officials', 'authorities'\n"
         "- No hashtags\n\n"
         "Return only the translated version or \"SKIP\"."

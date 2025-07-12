@@ -117,13 +117,11 @@ BLOCKED_KEYWORDS = [
     'reklam', 'sponsor', 'sponsorlu', 'taksit', 'indirim', 'kampanya',
     'dem parti', 'dem partisi', 'özgür özel', 'chp', 'akp', 'ımamoğlu', 'imamoglu',
     'conflicttr', 'ww3media', 'ateobreaking', 'dunyadantr', 'dunyadan_tr',
-    # Only ultra-biased terms
-    'zionist', 'siyonist', 'zionism', 'siyonizm', 'zionist regime', 'sionist',
+    # Only promotional/spam terms, no political bias filtering
 ]
 
 # Enhanced filtering for biased language - only extreme bias terms
 BIAS_KEYWORDS = [
-    'zionist', 'siyonist', 'zionism', 'siyonizm', 'zionist regime', 'sionist',
     'puppet government', 'puppet regime', 'puppet state',
     'evil empire', 'axis of evil', 'terrorist state', 'rogue state'
 ]
