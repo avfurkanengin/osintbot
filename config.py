@@ -27,6 +27,9 @@ def get_session_file():
     if not session_b64:
         try:
             print("🔍 Checking for session files in repository...")
+            print(f"🔍 Current working directory: {os.getcwd()}")
+            print(f"🔍 Files in current directory: {os.listdir('.')}")
+            
             session_parts = []
             for i in range(1, 10):  # Check session_part_1.txt, session_part_2.txt, etc.
                 part_file = f"session_part_{i}.txt"
