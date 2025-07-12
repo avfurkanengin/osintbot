@@ -195,6 +195,34 @@ class DatabaseManager:
         finally:
             conn.close()
     
+    def get_post_by_message_id(self, message_id: str) -> Optional[Dict]:
+        """Get a specific post by message_id"""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+            SELECT 
+                id, message_id, channel_name, sender_name, original_text,
+                translated_text, media_type, media_path, classification,
+                quality_score, bias_score, status, created_at, processed_at,
+                posted_at, twitter_url, telegram_url, priority
+            FROM posts
+            WHERE message_id = ?
+        ''', (message_id,))
+        
+        row = cursor.fetchone()
+        conn.close()
+        
+        if row:
+            columns = [
+                'id', 'message_id', 'channel_name', 'sender_name', 'original_text',
+                'translated_text', 'media_type', 'media_path', 'classification',
+                'quality_score', 'bias_score', 'status', 'created_at', 'processed_at',
+                'posted_at', 'twitter_url', 'telegram_url', 'priority'
+            ]
+            return dict(zip(columns, row))
+        return None
+
     def get_posts(self, status: Optional[str] = None, limit: int = 50, offset: int = 0) -> List[Dict]:
         """Get posts with optional filtering"""
         conn = sqlite3.connect(self.db_path)

@@ -707,7 +707,8 @@
             
             try {
                 const offset = currentPage * pageSize;
-                const response = await apiCall(`/api/posts?limit=${pageSize}&offset=${offset}`);
+                // Only get posts with status 'posted' for confirmed tab
+                const response = await apiCall(`/api/posts?status=posted&limit=${pageSize}&offset=${offset}`);
                 const newPosts = response.posts || [];
                 
                 if (loadMore) {

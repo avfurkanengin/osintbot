@@ -124,6 +124,13 @@ def process_channel(client, channel, info, sent_hashes):
         if current_hash in sent_hashes:
             print("[DUPLICATE] Zaten gönderilmiş, atlanıyor.")
             continue
+            
+        # Also check database for duplicates before processing
+        message_id = f"{channel}_{message.id}"
+        existing_post = db.get_post_by_message_id(message_id)
+        if existing_post:
+            print(f"[DUPLICATE] Post already exists in database: {message_id}")
+            continue
 
         cleaned = remove_hashtags(raw_text)
         
@@ -183,6 +190,9 @@ def process_channel(client, channel, info, sent_hashes):
                 'telegram_url': f"https://t.me/{channel}/{message.id}"
             }
             db.add_post(post_data)
+            
+            # Save hash for rejected posts too to prevent reprocessing
+            save_sent_hash(current_hash)
             continue
 
         # Validate translated content before creating message
@@ -218,6 +228,9 @@ def process_channel(client, channel, info, sent_hashes):
         if post_id:
             print(f"[DATABASE] Saved post {post_id} to database")
             
+            # Save hash BEFORE sending to prevent duplicates on restart
+            save_sent_hash(current_hash)
+            
             # For now, still auto-post to Telegram (can be disabled later)
             print("[SEND] Gönderiliyor:\n", final_message)
             send_to_telegram(BOT_TOKEN, CHAT_ID, final_message, media_path, is_video=is_video)
@@ -225,7 +238,6 @@ def process_channel(client, channel, info, sent_hashes):
             # Update status to posted
             db.update_post_status(post_id, 'posted')
             
-            save_sent_hash(current_hash)
             log_gpt_interaction(CSV_FILE, "Final", datetime.now().strftime("%Y-%m-%d %H:%M"), channel, cleaned, True, usage)
 
             time.sleep(20)
