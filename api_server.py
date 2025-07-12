@@ -389,14 +389,14 @@ def serve_web_app():
             else:
                 return jsonify({'error': 'Web app not found'}), 404
         except:
-            # User is not authenticated, serve login page
+            # User is not authenticated, serve login page with existing design
             login_html = '''
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OSINT Bot - Login</title>
+    <title>the Pulse - Login</title>
     <style>
         * {
             margin: 0;
@@ -405,179 +405,198 @@ def serve_web_app():
         }
         
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background-color: #121212;
+            color: #ffffff;
+            overflow-x: hidden;
             display: flex;
-            align-items: center;
             justify-content: center;
-            padding: 20px;
+            align-items: center;
+            min-height: 100vh;
+        }
+        
+        /* Mobile-like container for desktop */
+        @media (min-width: 768px) {
+            body {
+                background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+                padding: 20px;
+            }
+            
+            .login-container {
+                max-width: 414px;
+                border-radius: 20px;
+                box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+                overflow: hidden;
+                background: #121212;
+            }
         }
         
         .login-container {
-            background: white;
-            padding: 40px;
-            border-radius: 10px;
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
             width: 100%;
             max-width: 400px;
+            background: #121212;
+            padding: 40px 30px;
         }
         
         .login-header {
             text-align: center;
-            margin-bottom: 30px;
+            margin-bottom: 40px;
         }
         
-        .login-header h1 {
-            color: #333;
-            font-size: 28px;
-            margin-bottom: 10px;
+        .login-title {
+            color: #ffffff;
+            font-size: 32px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            margin-bottom: 8px;
         }
         
-        .login-header p {
-            color: #666;
+        .login-subtitle {
+            color: #cccccc;
             font-size: 16px;
+            font-weight: 400;
         }
         
         .form-group {
-            margin-bottom: 20px;
+            margin-bottom: 24px;
         }
         
-        .form-group label {
+        .form-label {
             display: block;
-            margin-bottom: 5px;
-            color: #555;
+            margin-bottom: 8px;
+            font-size: 14px;
             font-weight: 500;
+            color: #ffffff;
         }
         
-        .form-group input {
+        .form-input {
             width: 100%;
-            padding: 12px;
-            border: 2px solid #ddd;
-            border-radius: 5px;
+            padding: 16px;
+            border: 1px solid #333333;
+            border-radius: 8px;
             font-size: 16px;
+            background: #1e1e1e;
+            color: #ffffff;
             transition: border-color 0.3s;
         }
         
-        .form-group input:focus {
+        .form-input:focus {
             outline: none;
-            border-color: #667eea;
+            border-color: #2196F3;
         }
         
-        .login-btn {
+        .login-button {
             width: 100%;
-            padding: 12px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 16px;
+            background: #2196F3;
             color: white;
             border: none;
-            border-radius: 5px;
+            border-radius: 8px;
             font-size: 16px;
-            font-weight: 500;
+            font-weight: 600;
             cursor: pointer;
-            transition: transform 0.2s;
+            transition: background 0.3s;
+            margin-top: 8px;
         }
         
-        .login-btn:hover {
-            transform: translateY(-2px);
+        .login-button:hover {
+            background: #1976D2;
         }
         
-        .login-btn:disabled {
-            opacity: 0.7;
+        .login-button:disabled {
+            background: #333333;
             cursor: not-allowed;
-            transform: none;
         }
         
-        .error-message {
-            color: #e74c3c;
+        .message {
+            margin-top: 16px;
+            padding: 12px;
+            border-radius: 6px;
             text-align: center;
-            margin-top: 15px;
-            padding: 10px;
-            background: #ffeaea;
-            border-radius: 5px;
-            display: none;
-        }
-        
-        .success-message {
-            color: #27ae60;
-            text-align: center;
-            margin-top: 15px;
-            padding: 10px;
-            background: #eafaf1;
-            border-radius: 5px;
-            display: none;
-        }
-        
-        .credentials-hint {
-            margin-top: 20px;
-            padding: 15px;
-            background: #f8f9fa;
-            border-radius: 5px;
-            border-left: 4px solid #667eea;
-        }
-        
-        .credentials-hint h3 {
-            color: #333;
-            margin-bottom: 10px;
             font-size: 14px;
         }
         
+        .message.error {
+            background: #2d1b1b;
+            color: #ff5252;
+            border-left: 4px solid #f44336;
+        }
+        
+        .message.success {
+            background: #1b2d1b;
+            color: #4caf50;
+            border-left: 4px solid #4caf50;
+        }
+        
+        .credentials-hint {
+            margin-top: 24px;
+            padding: 16px;
+            background: #1e1e1e;
+            border-radius: 8px;
+            border: 1px solid #333333;
+        }
+        
+        .credentials-hint h3 {
+            color: #ffffff;
+            margin-bottom: 12px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        
         .credentials-hint p {
-            color: #666;
+            color: #cccccc;
             font-size: 12px;
-            margin-bottom: 5px;
+            margin-bottom: 6px;
+            font-family: monospace;
         }
     </style>
 </head>
 <body>
     <div class="login-container">
         <div class="login-header">
-            <h1>🔍 OSINT Bot</h1>
-            <p>Dashboard Login</p>
+            <h1 class="login-title">the Pulse</h1>
+            <p class="login-subtitle">Geopolitics</p>
         </div>
         
         <form id="loginForm">
             <div class="form-group">
-                <label for="username">Username</label>
-                <input type="text" id="username" name="username" required>
+                <label class="form-label" for="username">ID</label>
+                <input class="form-input" type="text" id="username" name="username" required>
             </div>
             
             <div class="form-group">
-                <label for="password">Password</label>
-                <input type="password" id="password" name="password" required>
+                <label class="form-label" for="password">Password</label>
+                <input class="form-input" type="password" id="password" name="password" required>
             </div>
             
-            <button type="submit" class="login-btn" id="loginBtn">Login</button>
-            
-            <div class="error-message" id="errorMessage"></div>
-            <div class="success-message" id="successMessage"></div>
+            <button class="login-button" type="submit">Login</button>
         </form>
+        
+        <div id="message" class="message" style="display: none;"></div>
         
         <div class="credentials-hint">
             <h3>Available Accounts:</h3>
-            <p><strong>AdminFurkan</strong> / Furkan123</p>
-            <p><strong>AdminKayra</strong> / Kayra123</p>
-            <p><strong>AdminDogukan</strong> / Dogukan123</p>
-            <p><strong>AdminTest</strong> / Test123</p>
+            <p>AdminFurkan / Furkan123</p>
+            <p>AdminKayra / Kayra123</p>
+            <p>AdminDogukan / Dogukan123</p>
+            <p>AdminTest / Test123</p>
         </div>
     </div>
-    
+
     <script>
-        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             
             const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
-            const loginBtn = document.getElementById('loginBtn');
-            const errorMessage = document.getElementById('errorMessage');
-            const successMessage = document.getElementById('successMessage');
+            const messageDiv = document.getElementById('message');
+            const submitButton = document.querySelector('.login-button');
             
-            // Hide previous messages
-            errorMessage.style.display = 'none';
-            successMessage.style.display = 'none';
-            
-            // Disable button and show loading
-            loginBtn.disabled = true;
-            loginBtn.textContent = 'Logging in...';
+            // Show loading state
+            submitButton.disabled = true;
+            submitButton.textContent = 'Logging in...';
+            messageDiv.style.display = 'none';
             
             try {
                 const response = await fetch('/api/login', {
@@ -590,32 +609,35 @@ def serve_web_app():
                 
                 const data = await response.json();
                 
-                if (data.success) {
-                    // Store token in localStorage
+                if (response.ok && data.success) {
+                    // Store the JWT token
                     localStorage.setItem('jwt_token', data.token);
                     localStorage.setItem('user_info', JSON.stringify(data.user));
                     
                     // Show success message
-                    successMessage.textContent = 'Login successful! Redirecting...';
-                    successMessage.style.display = 'block';
+                    messageDiv.textContent = 'Login successful! Redirecting...';
+                    messageDiv.className = 'message success';
+                    messageDiv.style.display = 'block';
                     
                     // Redirect to dashboard
                     setTimeout(() => {
-                        window.location.reload();
+                        window.location.href = '/';
                     }, 1000);
                 } else {
                     // Show error message
-                    errorMessage.textContent = data.message || 'Login failed';
-                    errorMessage.style.display = 'block';
+                    messageDiv.textContent = data.message || 'Login failed';
+                    messageDiv.className = 'message error';
+                    messageDiv.style.display = 'block';
                 }
             } catch (error) {
                 console.error('Login error:', error);
-                errorMessage.textContent = 'Network error. Please try again.';
-                errorMessage.style.display = 'block';
+                messageDiv.textContent = 'Network error. Please try again.';
+                messageDiv.className = 'message error';
+                messageDiv.style.display = 'block';
             } finally {
-                // Re-enable button
-                loginBtn.disabled = false;
-                loginBtn.textContent = 'Login';
+                // Reset button
+                submitButton.disabled = false;
+                submitButton.textContent = 'Login';
             }
         });
     </script>
