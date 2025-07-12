@@ -78,22 +78,34 @@ print("✅ Telegram oturumu aktif.\n")
 def main():
     keep_alive()
     print("🚀 Bot çalışmaya başladı. Kanallar taranıyor...\n")
+    
+    # Add a startup delay to prevent immediate processing
+    print("[STARTUP] Waiting 10 seconds before first scan...")
+    time.sleep(10)
+    
     while True:
         try:
             print("[INFO] Kanallar kontrol ediliyor...")
             sent_hashes = get_sent_hashes()
+            print(f"[DEBUG] Loaded {len(sent_hashes)} sent hashes")
             new_messages = 0
 
             with client:
                 for channel, info in CHANNELS.items():
                     if process_channel(client, channel, info, sent_hashes):
                         new_messages += 1
+                        # Add delay between channels to prevent rapid processing
+                        print(f"[WAIT] Processed channel {channel}, waiting 10 seconds...")
+                        time.sleep(10)
 
             if new_messages == 0:
                 print("[INFO] Yeni mesaj bulunamadı.")
         except Exception as e:
             print("❌ Genel hata:", e)
             traceback.print_exc()
+            # Add delay on error to prevent rapid retries
+            print("[ERROR] Waiting 60 seconds before retry...")
+            time.sleep(60)
 
         # In main loop, calculate sleep based on priorities
         sleep_time = LOOP_INTERVAL if new_messages == 0 else LOOP_INTERVAL / 2  # Example adaptive

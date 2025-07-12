@@ -94,6 +94,10 @@ def process_channel(client, channel, info, sent_hashes):
     allowed_senders = info['allowed_senders']
     print(f"[INFO] Kanal: {channel}")
 
+    # Add more detailed logging for debugging
+    print(f"[DEBUG] Processing channel {channel} with {MESSAGE_LIMIT} message limit")
+    print(f"[DEBUG] Current sent_hashes count: {len(sent_hashes)}")
+
     for message in client.iter_messages(channel, limit=MESSAGE_LIMIT):
         if not message.text or not message.sender:
             continue
@@ -121,8 +125,10 @@ def process_channel(client, channel, info, sent_hashes):
             continue
 
         current_hash = hashlib.md5((channel + raw_text).encode()).hexdigest()
+        print(f"[DEBUG] Processing message {message.id} from {channel}, hash: {current_hash[:8]}...")
+        
         if current_hash in sent_hashes:
-            print("[DUPLICATE] Zaten gönderilmiş, atlanıyor.")
+            print(f"[DUPLICATE] Hash {current_hash[:8]}... already in sent_hashes, skipping.")
             continue
             
         # Also check database for duplicates before processing
@@ -131,6 +137,14 @@ def process_channel(client, channel, info, sent_hashes):
         if existing_post:
             print(f"[DUPLICATE] Post already exists in database: {message_id}")
             continue
+
+        # Check if message is too recent (within last 5 minutes) to prevent rapid processing
+        message_date = message.date
+        if message_date:
+            time_diff = datetime.now() - message_date
+            if time_diff.total_seconds() < 300:  # 5 minutes
+                print(f"[SKIP] Message too recent ({time_diff.total_seconds():.0f}s ago), skipping to prevent duplicates")
+                continue
 
         cleaned = remove_hashtags(raw_text)
         
@@ -240,7 +254,9 @@ def process_channel(client, channel, info, sent_hashes):
             
             log_gpt_interaction(CSV_FILE, "Final", datetime.now().strftime("%Y-%m-%d %H:%M"), channel, cleaned, True, usage)
 
-            time.sleep(20)
+            # Add longer delay to prevent rapid duplicate processing
+            print("[WAIT] Waiting 30 seconds before processing next message...")
+            time.sleep(30)
             return True  # Indicate a new message was processed
         else:
             print("[WARN] Failed to save post to database or duplicate detected")
