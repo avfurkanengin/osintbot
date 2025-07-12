@@ -2,6 +2,7 @@ import openai
 import hashlib
 import time
 import traceback
+import os
 from datetime import datetime
 from telethon.sync import TelegramClient
 from config import *
@@ -11,7 +12,11 @@ from urllib.parse import quote
 import requests
 from database import DatabaseManager
 
+# Configure OpenAI client properly
 openai.api_key = OPENAI_API_KEY
+
+# Disable any proxy settings that might cause issues
+os.environ['NO_PROXY'] = '*'
 
 # Initialize database
 db = DatabaseManager()
@@ -152,8 +157,10 @@ def process_channel(client, channel, info, sent_hashes):
         
         # Translate and check if geopolitical
         translated, usage = translate_if_geopolitical(cleaned)
-        if translated.upper() == "SKIP":
-            print("[SKIP] GPT 'SKIP' dedi.")
+        
+        # Check if translation failed or returned empty
+        if not translated or translated.upper() == "SKIP":
+            print("[SKIP] GPT 'SKIP' dedi veya çeviri başarısız.")
             log_gpt_interaction(CSV_FILE, "Translate & Filter", datetime.now().strftime("%Y-%m-%d %H:%M"), channel, cleaned, False, usage)
             
             # Still save to database as rejected content
@@ -175,6 +182,11 @@ def process_channel(client, channel, info, sent_hashes):
                 'telegram_url': f"https://t.me/{channel}/{message.id}"
             }
             db.add_post(post_data)
+            continue
+
+        # Validate translated content before creating message
+        if len(translated.strip()) < 10:
+            print("[SKIP] Çeviri çok kısa veya boş.")
             continue
 
         # Create X (Twitter) URL

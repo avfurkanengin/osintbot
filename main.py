@@ -2,14 +2,52 @@ import os
 import base64
 import time
 import traceback
+import tempfile
 from telethon.sync import TelegramClient
 from config import *
 from bot import process_channel
 from keep_alive import keep_alive  # Assuming keep_alive.py exists; otherwise integrate
 from utils import get_sent_hashes
 
-# Session setup - Use SESSION_FILE from config which handles Railway deployment
-session_path = SESSION_FILE.replace('.session', '')  # Remove .session extension for TelegramClient
+# Force session loading from repository files
+def load_session_from_files():
+    """Load session from repository files and return session path"""
+    print("🔍 Loading session from repository files...")
+    print(f"📁 Current directory: {os.getcwd()}")
+    print(f"📋 Files available: {os.listdir('.')}")
+    
+    session_parts = []
+    for i in range(1, 10):
+        part_file = f"session_part_{i}.txt"
+        if os.path.exists(part_file):
+            print(f"✅ Found {part_file}")
+            with open(part_file, 'r') as f:
+                content = f.read().strip()
+                session_parts.append(content)
+                print(f"✅ Loaded {len(content)} characters from {part_file}")
+        else:
+            print(f"❌ {part_file} not found")
+            break
+    
+    if session_parts:
+        session_b64 = ''.join(session_parts)
+        print(f"✅ Total session length: {len(session_b64)} characters")
+        
+        try:
+            session_data = base64.b64decode(session_b64)
+            temp_session = tempfile.NamedTemporaryFile(delete=False, suffix='.session')
+            temp_session.write(session_data)
+            temp_session.close()
+            print(f"✅ Created session file: {temp_session.name}")
+            return temp_session.name.replace('.session', '')
+        except Exception as e:
+            print(f"❌ Error decoding session: {e}")
+    
+    print("❌ No valid session found, using default")
+    return SESSION_FILE.replace('.session', '')
+
+# Session setup - Force load from repository files
+session_path = load_session_from_files()
 
 # Clean up lock files that might remain from previous runs
 try:
