@@ -26,17 +26,25 @@ def get_session_file():
     # Try to load session from repository files (GitHub deployment)
     if not session_b64:
         try:
+            print("🔍 Checking for session files in repository...")
             session_parts = []
             for i in range(1, 10):  # Check session_part_1.txt, session_part_2.txt, etc.
                 part_file = f"session_part_{i}.txt"
+                print(f"🔍 Looking for {part_file}...")
                 if os.path.exists(part_file):
+                    print(f"✅ Found {part_file}")
                     with open(part_file, 'r') as f:
-                        session_parts.append(f.read().strip())
+                        content = f.read().strip()
+                        session_parts.append(content)
+                        print(f"✅ Loaded {len(content)} characters from {part_file}")
                 else:
+                    print(f"❌ {part_file} not found")
                     break
             if session_parts:
                 session_b64 = ''.join(session_parts)
-                print(f"✅ Loaded session from {len(session_parts)} repository files")
+                print(f"✅ Loaded session from {len(session_parts)} repository files, total length: {len(session_b64)}")
+            else:
+                print("❌ No session files found in repository")
         except Exception as e:
             print(f"❌ Error loading session from repository files: {e}")
     
