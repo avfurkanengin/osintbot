@@ -32,6 +32,7 @@ def get_session_file():
         return local_session
     else:
         print(f"❌ Local session file not found: {local_session}")
+        print("🔄 Will create new session file when bot starts")
         return local_session
 
 # Load sensitive data from environment variables
