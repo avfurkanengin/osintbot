@@ -10,6 +10,19 @@ def get_session_file():
     """Get session file path, handling Railway deployment"""
     session_b64 = os.getenv('SESSION_B64')
     
+    # Try to get split session data (for very long sessions)
+    if not session_b64:
+        session_parts = []
+        for i in range(1, 10):  # Check SESSION_B64_1, SESSION_B64_2, etc.
+            part = os.getenv(f'SESSION_B64_{i}')
+            if part:
+                session_parts.append(part)
+            else:
+                break
+        if session_parts:
+            session_b64 = ''.join(session_parts)
+            print(f"✅ Reconstructed session from {len(session_parts)} parts")
+    
     # Check if we're in Railway deployment (SESSION_B64 exists and is valid)
     if session_b64 and len(session_b64) > 100:  # Base64 should be long
         # Decode base64 session for Railway deployment
