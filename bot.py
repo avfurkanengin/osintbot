@@ -25,52 +25,77 @@ def calculate_content_quality(text, sender_name="", channel=""):
     """Calculate content quality score based on various factors"""
     score = 0.5  # Base score
     
-    # Length factor (optimal around 100-200 chars)
+    # Length factor (optimal around 100-200 chars for Twitter)
     length = len(text)
-    if 50 <= length <= 300:
+    if 80 <= length <= 250:
+        score += 0.3
+    elif 50 <= length <= 300:
         score += 0.2
     elif length > 300:
         score -= 0.1
     
-    # Official source indicators
-    official_terms = ['breaking', 'urgent', 'confirmed', 'official', 'statement', 'announces']
-    if any(term in text.lower() for term in official_terms):
-        score += 0.2
+    # Breaking news indicators (positive for quality)
+    breaking_terms = ['breaking', 'urgent', 'just in', 'developing', 'latest', 'update']
+    breaking_count = sum(1 for term in breaking_terms if term in text.lower())
+    score += min(breaking_count * 0.15, 0.3)
     
-    # Geopolitical relevance
-    geo_terms = ['government', 'military', 'president', 'minister', 'embassy', 'border', 'sanctions']
+    # Official source indicators
+    official_terms = ['confirmed', 'official', 'statement', 'announces', 'declares', 'reports']
+    official_count = sum(1 for term in official_terms if term in text.lower())
+    score += min(official_count * 0.1, 0.2)
+    
+    # Geopolitical relevance (higher weight)
+    geo_terms = ['government', 'military', 'president', 'minister', 'embassy', 'border', 'sanctions', 
+                 'diplomatic', 'treaty', 'alliance', 'conflict', 'peace', 'war', 'crisis', 'summit']
     geo_count = sum(1 for term in geo_terms if term in text.lower())
-    score += min(geo_count * 0.1, 0.3)
+    score += min(geo_count * 0.15, 0.4)  # Higher weight for geopolitical terms
+    
+    # Country/region mentions (positive for geopolitical relevance)
+    country_terms = ['russia', 'ukraine', 'israel', 'palestine', 'china', 'taiwan', 'iran', 'syria', 
+                    'turkey', 'germany', 'france', 'uk', 'usa', 'nato', 'eu', 'un']
+    country_count = sum(1 for term in country_terms if term in text.lower())
+    score += min(country_count * 0.1, 0.3)
     
     # Reduce score for promotional content
-    promo_terms = ['subscribe', 'follow', 'join', 'channel', 'link']
-    if any(term in text.lower() for term in promo_terms):
+    promo_terms = ['subscribe', 'follow', 'join', 'channel', 'link', 'click', 'download']
+    promo_count = sum(1 for term in promo_terms if term in text.lower())
+    score -= min(promo_count * 0.2, 0.4)
+    
+    # Reduce score for excessive punctuation (spam indicator)
+    punctuation_count = text.count('!') + text.count('?') + text.count('...')
+    if punctuation_count > 3:
         score -= 0.2
+    
+    # Bonus for well-structured content
+    if any(char.isupper() for char in text[:10]):  # Starts with proper capitalization
+        score += 0.1
     
     return min(max(score, 0), 1)  # Clamp between 0 and 1
 
 def calculate_bias_score(text):
     """Calculate bias score (0 = neutral, 1 = highly biased)"""
     bias_terms = [
-        'puppet', 'regime', 'terrorist', 'fascist', 'evil', 'destroy', 'crush',
-        'zionist', 'propaganda', 'fake', 'lies', 'corrupt', 'dictator'
+        'zionist', 'siyonist', 'zionism', 'siyonizm', 'zionist regime', 'sionist',
+        'puppet government', 'puppet regime', 'puppet state',
+        'evil empire', 'axis of evil', 'terrorist state', 'rogue state',
+        'nazi', 'fascist', 'terrorist regime', 'dictator regime'
     ]
     
     bias_count = sum(1 for term in bias_terms if term in text.lower())
-    return min(bias_count * 0.2, 1)  # Max bias score of 1
+    return min(bias_count * 0.25, 1)  # Max bias score of 1
 
 def translate_if_geopolitical(text):
     prompt = (
-        "You will receive a news post.\n\n"
-        "1. If the content is NOT about international politics, global affairs, or geopolitical events, respond ONLY with: \"SKIP\".\n"
-        "2. If it IS geopolitical, translate or rewrite the content into fluent, concise English suitable for a Twitter audience. "
-        "Keep it under 280 characters. Stay strictly neutral and objective. Do not use hashtags. "
-        "Begin with a country flag emoji if the news is related to a specific country, or use a globe emoji 🌍 if it's global news.\n\n"
-        "IMPORTANT: Remove any heavily biased language or propaganda terms. "
-        "Focus on factual reporting. Avoid inflammatory terms like 'zionist', 'puppet government', 'evil empire', etc. "
-        "Use neutral terms like 'government', 'officials', 'authorities', 'reported', 'according to sources'. "
-        "However, standard news terms like 'regime', 'breaking news', 'urgent', 'destroy', 'crush' are acceptable when factually accurate.\n\n"
-        "Return only the translated/rewritten version or the word 'SKIP'."
+        "Analyze this news post:\n\n"
+        "1. If NOT about international politics, global affairs, or geopolitical events → respond: \"SKIP\"\n"
+        "2. If IS geopolitical → translate/rewrite into concise English (max 280 chars) for Twitter audience\n\n"
+        "Guidelines:\n"
+        "- Start with country flag emoji 🌍 or specific country flag\n"
+        "- Stay neutral and factual\n"
+        "- Remove biased terms like 'zionist', 'puppet government', 'evil empire'\n"
+        "- Use neutral terms: 'government', 'officials', 'authorities'\n"
+        "- No hashtags\n\n"
+        "Return only the translated version or \"SKIP\"."
     )
     try:
         messages = [

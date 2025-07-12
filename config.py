@@ -117,15 +117,15 @@ BLOCKED_KEYWORDS = [
     'reklam', 'sponsor', 'sponsorlu', 'taksit', 'indirim', 'kampanya',
     'dem parti', 'dem partisi', 'özgür özel', 'chp', 'akp', 'ımamoğlu', 'imamoglu',
     'conflicttr', 'ww3media', 'ateobreaking', 'dunyadantr', 'dunyadan_tr',
-    # Specific bias terms
+    # Only ultra-biased terms
     'zionist', 'siyonist', 'zionism', 'siyonizm', 'zionist regime', 'sionist',
 ]
 
-# Enhanced filtering for biased language
+# Enhanced filtering for biased language - only extreme bias terms
 BIAS_KEYWORDS = [
     'zionist', 'siyonist', 'zionism', 'siyonizm', 'zionist regime', 'sionist',
     'puppet government', 'puppet regime', 'puppet state',
-    'evil empire', 'axis of evil'
+    'evil empire', 'axis of evil', 'terrorist state', 'rogue state'
 ]
 
 SESSION_NAME = "multi_session"
