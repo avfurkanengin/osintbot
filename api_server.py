@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, send_file, Response
+from flask import Flask, request, jsonify, send_file, Response, redirect
 from flask_cors import CORS
 import os
 import logging
@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 from typing import Dict, Any, List, Optional, Union
 import json
 from database import DatabaseManager
-from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
+from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity, decode_token
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 
@@ -378,15 +378,32 @@ def serve_header():
 @app.route('/', methods=['GET'])
 @limiter.limit("10 per minute")
 def serve_web_app():
-    """Serve the unified web app that handles both login and dashboard"""
+    """Serve the login page or redirect to dashboard if authenticated"""
     try:
-        unified_html = '''
+        # Check if there's a JWT token in the request
+        token = request.args.get('token') or request.headers.get('Authorization')
+        
+        if token:
+            # If token is provided, verify it
+            try:
+                if token.startswith('Bearer '):
+                    token = token[7:]
+                
+                decode_token(token)
+                # Token is valid, redirect to dashboard
+                return redirect('/dashboard')
+            except:
+                # Token is invalid, continue to login page
+                pass
+        
+        # Serve login page
+        login_html = '''
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>the Pulse - Geopolitics</title>
+    <title>the Pulse - Login</title>
     <style>
         * {
             margin: 0;
@@ -399,10 +416,6 @@ def serve_web_app():
             background-color: #121212;
             color: #ffffff;
             overflow-x: hidden;
-        }
-        
-        /* Login Screen Styles */
-        .login-screen {
             display: flex;
             justify-content: center;
             align-items: center;
@@ -410,7 +423,7 @@ def serve_web_app():
         }
         
         @media (min-width: 768px) {
-            .login-screen {
+            body {
                 background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
                 padding: 20px;
             }
@@ -521,142 +534,59 @@ def serve_web_app():
             color: #4caf50;
             border-left: 4px solid #4caf50;
         }
-        
-        /* Dashboard Styles */
-        .dashboard-screen {
-            display: none;
-            width: 100%;
-            height: 100vh;
-        }
-        
-        .loading-screen {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            flex-direction: column;
-        }
-        
-        .loading-spinner {
-            border: 3px solid #333333;
-            border-top: 3px solid #2196F3;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
-            margin-bottom: 20px;
-        }
-        
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        
-        .hidden {
-            display: none !important;
-        }
     </style>
 </head>
 <body>
-    <!-- Loading Screen -->
-    <div id="loadingScreen" class="loading-screen">
-        <div class="loading-spinner"></div>
-        <p>Loading...</p>
-    </div>
-    
-    <!-- Login Screen -->
-    <div id="loginScreen" class="login-screen hidden">
-        <div class="login-container">
-            <div class="login-header">
-                <h1 class="login-title">the Pulse</h1>
-                <p class="login-subtitle">Geopolitics</p>
+    <div class="login-container">
+        <div class="login-header">
+            <h1 class="login-title">the Pulse</h1>
+            <p class="login-subtitle">Geopolitics</p>
+        </div>
+        
+        <form id="loginForm">
+            <div class="form-group">
+                <label class="form-label" for="username">ID</label>
+                <input class="form-input" type="text" id="username" name="username" required>
             </div>
             
-            <form id="loginForm">
-                <div class="form-group">
-                    <label class="form-label" for="username">ID</label>
-                    <input class="form-input" type="text" id="username" name="username" required>
-                </div>
-                
-                <div class="form-group">
-                    <label class="form-label" for="password">Password</label>
-                    <input class="form-input" type="password" id="password" name="password" required>
-                </div>
-                
-                <button class="login-button" type="submit">Login</button>
-            </form>
+            <div class="form-group">
+                <label class="form-label" for="password">Password</label>
+                <input class="form-input" type="password" id="password" name="password" required>
+            </div>
             
-            <div id="message" class="message" style="display: none;"></div>
-        </div>
-    </div>
-    
-    <!-- Dashboard Screen -->
-    <div id="dashboardScreen" class="dashboard-screen">
-        <iframe id="dashboardFrame" src="" width="100%" height="100%" frameborder="0"></iframe>
+            <button class="login-button" type="submit">Login</button>
+        </form>
+        
+        <div id="message" class="message" style="display: none;"></div>
     </div>
 
     <script>
-        // Check authentication status on page load
+        // Check if user is already logged in
         window.addEventListener('load', function() {
-            checkAuthAndLoadContent();
-        });
-        
-        async function checkAuthAndLoadContent() {
             const token = localStorage.getItem('jwt_token');
-            
-            if (!token) {
-                // No token, show login screen
-                showLoginScreen();
-                return;
-            }
-            
-            try {
+            if (token) {
                 // Verify token with server
-                const response = await fetch('/api/health', {
+                fetch('/api/health', {
                     headers: {
                         'Authorization': `Bearer ${token}`
                     }
-                });
-                
-                if (response.ok) {
-                    // Token is valid, load dashboard
-                    loadDashboard();
-                } else {
-                    // Token is invalid, remove it and show login
-                    localStorage.removeItem('jwt_token');
-                    localStorage.removeItem('user_info');
-                    showLoginScreen();
-                }
-            } catch (error) {
-                console.error('Auth check failed:', error);
-                showLoginScreen();
-            }
-        }
-        
-        function showLoginScreen() {
-            document.getElementById('loadingScreen').classList.add('hidden');
-            document.getElementById('loginScreen').classList.remove('hidden');
-            document.getElementById('dashboardScreen').classList.add('hidden');
-        }
-        
-        function loadDashboard() {
-            document.getElementById('loadingScreen').classList.add('hidden');
-            document.getElementById('loginScreen').classList.add('hidden');
-            document.getElementById('dashboardScreen').classList.remove('hidden');
-            
-            // Load the dashboard content
-            fetch('/dashboard')
-                .then(response => response.text())
-                .then(html => {
-                    document.getElementById('dashboardScreen').innerHTML = html;
+                })
+                .then(response => {
+                    if (response.ok) {
+                        // Token is valid, redirect to dashboard
+                        window.location.href = '/dashboard';
+                    } else {
+                        // Token is invalid, remove it
+                        localStorage.removeItem('jwt_token');
+                        localStorage.removeItem('user_info');
+                    }
                 })
                 .catch(error => {
-                    console.error('Failed to load dashboard:', error);
-                    showLoginScreen();
+                    console.error('Auth check failed:', error);
                 });
-        }
+            }
+        });
         
-        // Handle login form submission
         document.getElementById('loginForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             
@@ -687,13 +617,13 @@ def serve_web_app():
                     localStorage.setItem('user_info', JSON.stringify(data.user));
                     
                     // Show success message
-                    messageDiv.textContent = 'Login successful! Loading dashboard...';
+                    messageDiv.textContent = 'Login successful! Redirecting to dashboard...';
                     messageDiv.className = 'message success';
                     messageDiv.style.display = 'block';
                     
-                    // Load dashboard
+                    // Redirect to dashboard
                     setTimeout(() => {
-                        loadDashboard();
+                        window.location.href = '/dashboard';
                     }, 1000);
                 } else {
                     // Show error message
@@ -716,19 +646,19 @@ def serve_web_app():
 </body>
 </html>
         '''
-        from flask import Response
-        return Response(unified_html, mimetype='text/html')
+        return Response(login_html, mimetype='text/html')
             
     except Exception as e:
         logger.error(f"Error serving web app: {e}")
         return jsonify({'error': 'Failed to serve web app'}), 500
 
 @app.route('/dashboard', methods=['GET'])
-@jwt_required()
 @limiter.limit("10 per minute")
 def serve_dashboard():
     """Serve the dashboard content"""
     try:
+        # Check if user is authenticated via JWT token in localStorage (client-side)
+        # The JWT verification will be handled by the dashboard's JavaScript
         app_path = 'mobile-app/public/app.html'
         if os.path.exists(app_path):
             return send_file(app_path)
