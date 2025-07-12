@@ -12,8 +12,8 @@ from urllib.parse import quote
 import requests
 from database import DatabaseManager
 
-# Configure OpenAI client properly
-openai.api_key = OPENAI_API_KEY
+# Configure OpenAI client properly for newer versions
+client = openai.OpenAI(api_key=OPENAI_API_KEY)
 
 # Disable any proxy settings that might cause issues
 os.environ['NO_PROXY'] = '*'
@@ -77,7 +77,7 @@ def translate_if_geopolitical(text):
             {"role": "system", "content": prompt},
             {"role": "user", "content": text}
         ]
-        response = openai.chat.completions.create(
+        response = client.chat.completions.create(
             model="gpt-4o",
             messages=messages,
             temperature=0.7,
@@ -86,7 +86,8 @@ def translate_if_geopolitical(text):
         output = (response.choices[0].message.content or '').strip()
         return output, response.usage
     except Exception as e:
-        print("[GPT TRANSLATE ERROR]", e)
+        print(f"[GPT TRANSLATE ERROR] {type(e).__name__}: {e}")
+        print(f"[GPT TRANSLATE ERROR] Full traceback: {traceback.format_exc()}")
         return "", None
 
 def process_channel(client, channel, info, sent_hashes):

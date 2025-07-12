@@ -189,7 +189,8 @@ class DatabaseManager:
             return post_id
             
         except sqlite3.IntegrityError as e:
-            logger.warning(f"Post already exists: {e}")
+            message_id = post_data.get('message_id', 'unknown')
+            logger.warning(f"Post already exists (message_id: {message_id}): {e}")
             return None
         finally:
             conn.close()
@@ -214,8 +215,8 @@ class DatabaseManager:
             params.append(status)
         
         query += ' ORDER BY created_at DESC LIMIT ? OFFSET ?'
-        params.append(limit)
-        params.append(offset)
+        params.append(str(limit))
+        params.append(str(offset))
         
         cursor.execute(query, params)
         rows = cursor.fetchall()
@@ -249,7 +250,7 @@ class DatabaseManager:
                 update_fields.append(f'{key} = ?')
                 params.append(value)
         
-        params.append(post_id)
+        params.append(str(post_id))
         
         query = f'UPDATE posts SET {", ".join(update_fields)} WHERE id = ?'
         cursor.execute(query, params)
