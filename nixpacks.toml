@@ -1,0 +1,8 @@
+[phases.build]
+cmds = ["pip install -r requirements.txt"]
+
+[phases.start]
+cmd = "python api_server.py"
+
+[variables]
+PYTHONPATH = "/app"

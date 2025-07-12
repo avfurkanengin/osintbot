@@ -1,0 +1,31 @@
+Tarih,Aşama,Kanal,Özet,Telegram’a Gönderildi mi?,Prompt Tokens,Completion Tokens,Toplam Tokens
+2025-07-12 21:30,Final,conflict_tr,"🔴 Cumhurbaşkanı Erdoğan, Irak Başbakanı Sudani ile bir telefon görüşmesi gerçekleştirdi.
+
+▪️Görüşmed",Evet,266,29,295
+2025-07-12 21:30,Final,ww3media,"🔴Cumhurbaşkanı Erdoğan’ın bayrak çağrısının ardından, Diyarbakır’daki tarihi surlara Türk bayrakları",Evet,249,28,277
+2025-07-12 21:31,Translate & Filter,ateobreaking,"Павел Дуров: Несколько прокуроров [во Франции], движимые карьерными амбициями или политическими моти",Hayır,288,2,290
+2025-07-12 21:31,Translate & Filter,ateobreaking,Павел Дуров: Французские бюрократы ведут крестовый поход против свободы слова и технического прогрес,Hayır,285,2,287
+2025-07-12 21:31,Final,ateobreaking,"**Секретную службу не наказали после покушения на Трампа в Батлере** — CNN
+
+За прошедший с покушения",Evet,283,29,312
+2025-07-12 21:31,Final,firstreportsnews,"הגיע הזמן: 30 מטרות הותקפו בבית חאנון באמצעות 120 חימושים מדויקים, להשמדת תשתיות תת קרקעיות, שנה ו-9",Evet,276,36,312
+2025-07-12 21:52,Final,conflict_tr,"🚨 Cumhurbaşkanı Erdoğan, Azerbaycan Cumhurbaşkanı Aliyev ile telefon görüşmesi gerçekleştirdi. 
+
+▪️G",Evet,287,33,320
+2025-07-12 21:54,Translate & Filter,ww3media,"🔴Cumhurbaşkanı Erdoğan, Kızılcahamam’daki Toplu Açılış ve Anahtar Teslim Töreni alanında karanfiller",Hayır,255,2,257
+2025-07-12 21:54,Final,ww3media,"🔴Alman General Freuding:
+
+Ukrayna bu ay, Almanya'nın sözünü verdiği uzun menzilli füzeleri teslim al",Evet,249,29,278
+2025-07-12 21:55,Final,ateobreaking,"В Финляндии задержали бывшего вагнеровца, который просил убежища. Он воевал в Бахмуте. Видео: Архив",Evet,252,26,278
+2025-07-12 21:56,Final,firstreportsnews,"הגיע הזמן: 30 מטרות הותקפו בבית חאנון באמצעות 120 חימושים מדויקים, להשמדת תשתיות תת קרקעיות, שנה ו-9",Evet,276,42,318
+2025-07-12 22:01,Final,conflict_tr,"🔴 Cumhurbaşkanı Erdoğan, Irak Başbakanı Sudani ile bir telefon görüşmesi gerçekleştirdi.
+
+▪️Görüşmed",Evet,266,31,297
+2025-07-12 22:02,Translate & Filter,ww3media,"🔴Cumhurbaşkanı Erdoğan, Kızılcahamam’daki Toplu Açılış ve Anahtar Teslim Töreni alanında karanfiller",Hayır,255,2,257
+2025-07-12 22:02,Final,ww3media,"🔴Cumhurbaşkanı Erdoğan’ın bayrak çağrısının ardından, Diyarbakır’daki tarihi surlara Türk bayrakları",Evet,249,25,274
+2025-07-12 22:03,Translate & Filter,ateobreaking,"Павел Дуров: Несколько прокуроров [во Франции], движимые карьерными амбициями или политическими моти",Hayır,288,2,290
+2025-07-12 22:03,Translate & Filter,ateobreaking,Павел Дуров: Французские бюрократы ведут крестовый поход против свободы слова и технического прогрес,Hayır,285,2,287
+2025-07-12 22:03,Final,ateobreaking,"**Секретную службу не наказали после покушения на Трампа в Батлере** — CNN
+
+За прошедший с покушения",Evet,283,36,319
+2025-07-12 22:05,Final,firstreportsnews,"דובר צה""ל: כוחות צה״ל בפיקוד הדרום מגבירים את התקיפות נגד ארגון הטרור חמאס במרחב בית חאנון: עשרות מט",Evet,360,42,402

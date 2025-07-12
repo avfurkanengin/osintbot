@@ -1,0 +1,1337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#2196F3" />
+    <title>OSINT Bot Mobile</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background-color: #121212;
+            color: #ffffff;
+            overflow-x: hidden;
+        }
+        
+        /* Mobile-like container for desktop */
+        @media (min-width: 768px) {
+            body {
+                background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+                padding: 20px;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                min-height: 100vh;
+            }
+            
+            #app {
+                max-width: 414px;
+                height: 896px;
+                border-radius: 20px;
+                box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+                overflow: hidden;
+                background: #121212;
+            }
+        }
+        
+        #app {
+            width: 100%;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background: #121212;
+        }
+        
+        /* Unified App Header */
+        .app-header {
+            width: 100%;
+            height: 80px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #000000;
+            padding: 12px 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        }
+        
+        .header-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .header-logo {
+            height: 32px;
+            width: 32px;
+            object-fit: contain;
+            border-radius: 6px;
+        }
+        
+        .header-title {
+            color: #ffffff;
+            font-size: 20px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+        
+        .header-subtitle {
+            color: #cccccc;
+            font-size: 12px;
+            font-weight: 400;
+            margin-top: 2px;
+        }
+        
+        /* Navigation */
+        .nav-tabs {
+            display: flex;
+            background: #1e1e1e;
+            border-bottom: 1px solid #333333;
+        }
+        
+        .nav-tab {
+            flex: 1;
+            padding: 12px;
+            text-align: center;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            color: #cccccc;
+            border-bottom: 2px solid transparent;
+            transition: all 0.3s;
+        }
+        
+        .nav-tab.active {
+            color: #2196F3;
+            border-bottom-color: #2196F3;
+            background: #2a2a2a;
+        }
+        
+        /* Content */
+        .content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+            background: #121212;
+        }
+        
+        /* Cards */
+        .card {
+            background: #1e1e1e;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            border: 1px solid #333333;
+        }
+        
+        .card-title {
+            font-size: 16px;
+            font-weight: bold;
+            color: #ffffff;
+            margin-bottom: 8px;
+        }
+        
+        .card-content {
+            font-size: 14px;
+            color: #cccccc;
+            line-height: 1.4;
+        }
+        
+        /* Stats */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        
+        .stat-card {
+            background: #1e1e1e;
+            border-radius: 8px;
+            padding: 16px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            border: 1px solid #333333;
+        }
+        
+        .stat-number {
+            font-size: 24px;
+            font-weight: bold;
+            color: #2196F3;
+            margin-bottom: 4px;
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: #cccccc;
+        }
+        
+        /* Buttons */
+        .btn {
+            background: #2196F3;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            margin: 4px;
+            transition: background 0.3s;
+        }
+        
+        .btn:hover {
+            background: #1976D2;
+        }
+        
+        .btn-outline {
+            background: transparent;
+            color: #2196F3;
+            border: 1px solid #2196F3;
+        }
+        
+        .btn-outline:hover {
+            background: #2196F3;
+            color: white;
+        }
+        
+        /* Loading */
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 200px;
+            flex-direction: column;
+        }
+        
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #333333;
+            border-top: 4px solid #2196F3;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Error */
+        .error {
+            background: #2d1b1b;
+            color: #ff5252;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 16px;
+            border-left: 4px solid #f44336;
+        }
+        
+        /* Success */
+        .success {
+            background: #1b2d1b;
+            color: #4caf50;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 16px;
+            border-left: 4px solid #4caf50;
+        }
+        
+        /* Info */
+        .info {
+            background: #1b1b2d;
+            color: #2196f3;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 16px;
+            border-left: 4px solid #2196f3;
+        }
+        
+        /* Settings */
+        .setting-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #333333;
+        }
+        
+        .setting-label {
+            font-size: 14px;
+            color: #ffffff;
+        }
+        
+        .setting-value {
+            font-size: 14px;
+            color: #cccccc;
+        }
+        
+        input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #333333;
+            border-radius: 6px;
+            font-size: 14px;
+            margin-bottom: 12px;
+            background: #1e1e1e;
+            color: #ffffff;
+        }
+        
+        /* Hide inactive tabs */
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        /* Posts */
+        .post-item {
+            background: #1e1e1e;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            border: 1px solid #333333;
+        }
+        
+        .post-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        
+        .post-channel {
+            font-size: 14px;
+            font-weight: bold;
+            color: #2196F3;
+        }
+        
+        .post-date {
+            font-size: 12px;
+            color: #cccccc;
+        }
+        
+        .post-text {
+            font-size: 14px;
+            color: #ffffff;
+            line-height: 1.4;
+            margin-bottom: 12px;
+        }
+        
+        .post-content {
+            font-size: 14px;
+            color: #ffffff;
+            line-height: 1.4;
+            margin-bottom: 12px;
+            background: #2a2a2a;
+            padding: 12px;
+            border-radius: 6px;
+        }
+        
+        .media-container {
+            margin: 16px 0;
+            padding: 12px;
+            background: #2a2a2a;
+            border-radius: 12px;
+            border: 1px solid #444444;
+            overflow: hidden;
+        }
+        
+        .post-media {
+            width: 100%;
+            max-width: 100%;
+            height: auto;
+            max-height: 400px;
+            object-fit: contain;
+            border-radius: 8px;
+            background: #1a1a1a;
+            display: block;
+            margin: 0 auto;
+        }
+        
+        .media-type-indicator {
+            font-size: 12px;
+            color: #888888;
+            margin-top: 8px;
+            text-align: center;
+            font-weight: 500;
+        }
+        
+        /* Responsive media styling */
+        @media (max-width: 768px) {
+            .media-container {
+                margin: 12px 0;
+                padding: 8px;
+            }
+            
+            .post-media {
+                max-height: 300px;
+                border-radius: 6px;
+            }
+        }
+        
+        /* Loading state for media */
+        .post-media[src=""] {
+            display: none;
+        }
+        
+        /* Media hover effects */
+        .post-media:hover {
+            transform: scale(1.02);
+            transition: transform 0.2s ease;
+        }
+        
+        /* Media wrapper and loading */
+        .media-wrapper {
+            position: relative;
+            width: 100%;
+            min-height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .media-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #888888;
+            font-size: 14px;
+            background: rgba(42, 42, 42, 0.8);
+            padding: 8px 16px;
+            border-radius: 4px;
+            z-index: 1;
+        }
+        
+        .no-media-container {
+            height: 120px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f5f5f5;
+            border-radius: 6px;
+            margin: 12px 0;
+        }
+        
+        .no-media-text {
+            color: #999;
+            font-size: 14px;
+        }
+        
+        .media-actions {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            padding: 8px;
+        }
+        
+        .media-error {
+            width: 100%;
+            min-height: 120px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #2a2a2a;
+            border-radius: 8px;
+        }
+        
+        /* Status badges */
+        .status-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        
+        .status-confirmed {
+            background: #1b2d1b;
+            color: #4caf50;
+            border: 1px solid #4caf50;
+        }
+        
+        .status-rejected {
+            background: #2d1b1b;
+            color: #ff5252;
+            border: 1px solid #f44336;
+        }
+        
+        .status-deleted {
+            background: #2d1b1b;
+            color: #ff5252;
+            border: 1px solid #f44336;
+        }
+        
+        .status-duplicate {
+            background: #2d2d1b;
+            color: #ff9800;
+            border: 1px solid #ff9800;
+        }
+        
+        .status-pending {
+            background: #1b1b2d;
+            color: #2196f3;
+            border: 1px solid #2196f3;
+        }
+        
+        /* Post actions */
+        .post-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+            flex-wrap: wrap;
+        }
+        
+        .btn-small {
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+        
+        /* Remove scrollbar */
+        .content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+            background: #121212;
+            scrollbar-width: none; /* Firefox */
+            -ms-overflow-style: none; /* Internet Explorer 10+ */
+        }
+        
+        .content::-webkit-scrollbar {
+            display: none; /* WebKit */
+        }
+        
+        /* Ensure mobile-friendly scrolling */
+        .content {
+            -webkit-overflow-scrolling: touch;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <div class="app-header">
+            <div class="header-brand">
+                <img src="/api/logo" alt="Logo" class="header-logo" onerror="this.style.display='none'">
+                <div>
+                    <div class="header-title">The Pulse</div>
+                    <div class="header-subtitle">Geopolitics</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="nav-tabs">
+            <button class="nav-tab active" onclick="showTab('confirmed')">Confirmed</button>
+            <button class="nav-tab" onclick="showTab('rejected')">Rejected</button>
+            <button class="nav-tab" onclick="showTab('analytics')">Analytics</button>
+            <button class="nav-tab" onclick="showTab('settings')">Settings</button>
+        </div>
+        
+        <div class="content">
+            <!-- Confirmed Tab -->
+            <div id="confirmed-tab" class="tab-content active">
+                <div id="confirmed-loading" class="loading">
+                    <div class="spinner"></div>
+                    <div style="margin-top: 12px;">Loading confirmed posts...</div>
+                </div>
+                <div id="confirmed-content"></div>
+            </div>
+            
+            <!-- Rejected Tab -->
+            <div id="rejected-tab" class="tab-content">
+                <div id="rejected-loading" class="loading">
+                    <div class="spinner"></div>
+                    <div style="margin-top: 12px;">Loading rejected posts...</div>
+                </div>
+                <div id="rejected-content"></div>
+            </div>
+            
+            <!-- Analytics Tab -->
+            <div id="analytics-tab" class="tab-content">
+                <div id="analytics-loading" class="loading">
+                    <div class="spinner"></div>
+                    <div style="margin-top: 12px;">Loading analytics...</div>
+                </div>
+                <div id="analytics-content"></div>
+            </div>
+            
+            <!-- Settings Tab -->
+            <div id="settings-tab" class="tab-content">
+                <div class="card">
+                    <div class="card-title">API Configuration</div>
+                    <div class="setting-item">
+                        <div class="setting-label">API URL</div>
+                        <div class="setting-value" id="current-api-url">http://127.0.0.1:5000</div>
+                    </div>
+                    <input type="text" id="api-url-input" placeholder="Enter API URL" value="http://127.0.0.1:5000">
+                    <button class="btn" onclick="updateApiUrl()">Update API URL</button>
+                    <button class="btn btn-outline" onclick="testConnection()">Test Connection</button>
+                </div>
+                
+                <div class="card">
+                    <div class="card-title">App Information</div>
+                    <div class="setting-item">
+                        <div class="setting-label">Version</div>
+                        <div class="setting-value">1.0.0</div>
+                    </div>
+                    <div class="setting-item">
+                        <div class="setting-label">Status</div>
+                        <div class="setting-value" id="connection-status">Connecting...</div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-title">Account</div>
+                    <button class="btn btn-outline" onclick="logout()" style="background: #dc3545; color: white; border-color: #dc3545;">Logout</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global state
+        let currentTab = 'confirmed';
+        let apiUrl = 'http://127.0.0.1:5000';
+        let confirmedPosts = [];
+        let rejectedPosts = [];
+        let stats = {};
+        let currentPage = 0;
+        let pageSize = 10;
+        let isLoading = false;
+        let hasMorePosts = true;
+        
+        // Initialize app
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check for authentication token
+            const token = localStorage.getItem('jwt_token');
+            if (!token) {
+                window.location.href = '../../test-login.html';
+                return;
+            }
+            
+            loadConfirmedPosts();
+            loadRejectedPosts();
+            loadAnalytics();
+            testConnection();
+        });
+        
+        // Tab switching
+        function showTab(tabName) {
+            // Update nav tabs
+            document.querySelectorAll('.nav-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            // Update content
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            document.getElementById(tabName + '-tab').classList.add('active');
+            
+            currentTab = tabName;
+            
+            // Load data if needed
+            if (tabName === 'confirmed') {
+                loadConfirmedPosts();
+            } else if (tabName === 'rejected') {
+                loadRejectedPosts();
+            } else if (tabName === 'analytics') {
+                loadAnalytics();
+            }
+        }
+        
+        // API calls
+        async function apiCall(endpoint, options = {}) {
+            try {
+                // Get JWT token from localStorage
+                const token = localStorage.getItem('jwt_token');
+                
+                const response = await fetch(apiUrl + endpoint, {
+                    ...options,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...(token && { 'Authorization': `Bearer ${token}` }),
+                        ...options.headers
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                return await response.json();
+            } catch (error) {
+                console.error('API Error:', error);
+                throw error;
+            }
+        }
+        
+        // Load confirmed posts (status: posted/confirmed)
+        async function loadConfirmedPosts(loadMore = false) {
+            if (isLoading || (!hasMorePosts && loadMore)) return;
+            
+            const loadingEl = document.getElementById('confirmed-loading');
+            const contentEl = document.getElementById('confirmed-content');
+            
+            isLoading = true;
+            
+            if (!loadMore) {
+                currentPage = 0;
+                hasMorePosts = true;
+                loadingEl.style.display = 'block';
+                contentEl.innerHTML = '';
+            }
+            
+            try {
+                const offset = currentPage * pageSize;
+                const response = await apiCall(`/api/posts?limit=${pageSize}&offset=${offset}`);
+                const newPosts = response.posts || [];
+                
+                if (loadMore) {
+                    confirmedPosts = [...confirmedPosts, ...newPosts];
+                } else {
+                    confirmedPosts = newPosts;
+                }
+                
+                hasMorePosts = newPosts.length === pageSize;
+                currentPage++;
+                
+                loadingEl.style.display = 'none';
+                renderConfirmedPosts();
+            } catch (error) {
+                loadingEl.style.display = 'none';
+                if (!loadMore) {
+                    contentEl.innerHTML = `
+                        <div class="error">
+                            <strong>Error loading confirmed posts:</strong> ${error.message}
+                            <br><br>
+                            <button class="btn" onclick="loadConfirmedPosts()">Retry</button>
+                        </div>
+                    `;
+                }
+            }
+            
+            isLoading = false;
+        }
+        
+        // Load rejected posts (status: rejected, deleted, archived)
+        async function loadRejectedPosts() {
+            const loadingEl = document.getElementById('rejected-loading');
+            const contentEl = document.getElementById('rejected-content');
+            
+            loadingEl.style.display = 'block';
+            contentEl.innerHTML = '';
+            
+            try {
+                const [rejectedResponse, deletedResponse, archivedResponse] = await Promise.all([
+                    apiCall('/api/posts?status=rejected'),
+                    apiCall('/api/posts?status=deleted'),
+                    apiCall('/api/posts?status=archived')
+                ]);
+                
+                rejectedPosts = [
+                    ...(rejectedResponse.posts || []),
+                    ...(deletedResponse.posts || []),
+                    ...(archivedResponse.posts || [])
+                ];
+                
+                loadingEl.style.display = 'none';
+                renderRejectedPosts();
+            } catch (error) {
+                loadingEl.style.display = 'none';
+                contentEl.innerHTML = `
+                    <div class="error">
+                        <strong>Error loading rejected posts:</strong> ${error.message}
+                        <br><br>
+                        <button class="btn" onclick="loadRejectedPosts()">Retry</button>
+                    </div>
+                `;
+            }
+        }
+        
+        // Render confirmed posts
+        function renderConfirmedPosts() {
+            const contentEl = document.getElementById('confirmed-content');
+            
+            if (confirmedPosts.length === 0) {
+                contentEl.innerHTML = `
+                    <div class="card">
+                        <div class="card-title">No Confirmed Posts</div>
+                        <div class="card-content">
+                            No confirmed posts available yet. Posts appear here after being accepted and rewritten by OpenAI.
+                        </div>
+                    </div>
+                `;
+            } else {
+                const postsHTML = confirmedPosts.map(post => `
+                    <div class="post-item">
+                        <div class="post-header">
+                            <div class="post-channel">${post.channel_name}</div>
+                            <div class="post-date">${formatDate(post.created_at)}</div>
+                        </div>
+                        ${post.translated_text ? `<div class="post-content"><strong>Content:</strong> ${post.translated_text}</div>` : ''}
+                        <div style="margin: 8px 0;">
+                            <span class="status-badge status-confirmed">CONFIRMED</span>
+                            ${post.quality_score ? `<span style="margin-left: 8px; font-size: 12px; color: #cccccc;">Quality: ${Math.round(post.quality_score * 100)}%</span>` : ''}
+                        </div>
+                        ${renderMediaWeb(post)}
+                        <div class="post-actions">
+                            <button class="btn btn-small" onclick="postAction(${post.id}, 'post_twitter')">Tweet</button>
+                            <button class="btn btn-outline btn-small" onclick="postAction(${post.id}, 'reject')">Reject</button>
+                            <button class="btn btn-outline btn-small" onclick="postAction(${post.id}, 'duplicate')">Duplicate</button>
+                            ${post.media_type === 'photo' ? `<button class="btn btn-outline btn-small" onclick="saveMedia('${apiUrl}/api/media/${post.media_path.startsWith('media/') ? post.media_path.substring(6) : post.media_path}', 'image')">Save Image</button>` : ''}
+                            ${post.media_type === 'video' ? `<button class="btn btn-outline btn-small" onclick="saveMedia('${apiUrl}/api/media/${post.media_path.startsWith('media/') ? post.media_path.substring(6) : post.media_path}', 'video')">Save Video</button>` : ''}
+                        </div>
+                    </div>
+                `).join('');
+                
+                const loadMoreButton = hasMorePosts ? `
+                    <div style="text-align: center; margin: 20px 0;">
+                        <button class="btn" onclick="loadConfirmedPosts(true)" ${isLoading ? 'disabled' : ''}>
+                            ${isLoading ? 'Loading...' : 'Load More Posts'}
+                        </button>
+                    </div>
+                ` : '';
+                
+                contentEl.innerHTML = postsHTML + loadMoreButton;
+                
+                // Load authenticated media for all posts with media
+                confirmedPosts.forEach(post => {
+                    if (post.media_path) {
+                        let mediaPath = post.media_path;
+                        if (mediaPath.startsWith('media/')) {
+                            mediaPath = mediaPath.substring(6);
+                        }
+                        loadAuthenticatedMedia(post.id, mediaPath, post.media_type);
+                    }
+                });
+            }
+        }
+        
+        // Render rejected posts
+        function renderRejectedPosts() {
+            const contentEl = document.getElementById('rejected-content');
+            
+            if (rejectedPosts.length === 0) {
+                contentEl.innerHTML = `
+                    <div class="card">
+                        <div class="card-title">No Rejected Posts</div>
+                        <div class="card-content">
+                            No rejected posts yet. Posts appear here when rejected by OpenAI or marked as duplicates.
+                        </div>
+                    </div>
+                `;
+            } else {
+                contentEl.innerHTML = rejectedPosts.map(post => {
+                    let statusDisplay = post.status.toUpperCase();
+                    let statusClass = `status-${post.status}`;
+                    
+                    // Special handling for duplicates
+                    if (post.status === 'archived') {
+                        statusDisplay = 'DUPLICATE';
+                        statusClass = 'status-duplicate';
+                    }
+                    
+                    return `
+                        <div class="post-item">
+                            <div class="post-header">
+                                <div class="post-channel">${post.channel_name}</div>
+                                <div class="post-date">${formatDate(post.created_at)}</div>
+                            </div>
+                            ${post.translated_text ? `<div class="post-content"><strong>Content:</strong> ${post.translated_text}</div>` : ''}
+                            <div style="margin: 8px 0;">
+                                <span class="status-badge ${statusClass}">${statusDisplay}</span>
+                                ${post.quality_score ? `<span style="margin-left: 8px; font-size: 12px; color: #cccccc;">Quality: ${Math.round(post.quality_score * 100)}%</span>` : ''}
+                            </div>
+                            ${renderMediaWeb(post)}
+                            <div class="post-actions">
+                                <button class="btn btn-small" onclick="postAction(${post.id}, 'restore')">Restore</button>
+                                ${post.media_type === 'photo' ? `<button class="btn btn-outline btn-small" onclick="saveMedia('${apiUrl}/api/media/${post.media_path.startsWith('media/') ? post.media_path.substring(6) : post.media_path}', 'image')">Save Image</button>` : ''}
+                                ${post.media_type === 'video' ? `<button class="btn btn-outline btn-small" onclick="saveMedia('${apiUrl}/api/media/${post.media_path.startsWith('media/') ? post.media_path.substring(6) : post.media_path}', 'video')">Save Video</button>` : ''}
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+                
+                // Load authenticated media for all posts with media
+                rejectedPosts.forEach(post => {
+                    if (post.media_path) {
+                        let mediaPath = post.media_path;
+                        if (mediaPath.startsWith('media/')) {
+                            mediaPath = mediaPath.substring(6);
+                        }
+                        loadAuthenticatedMedia(post.id, mediaPath, post.media_type);
+                    }
+                });
+            }
+        }
+        
+        // Load analytics
+        async function loadAnalytics() {
+            const loadingEl = document.getElementById('analytics-loading');
+            const contentEl = document.getElementById('analytics-content');
+            
+            loadingEl.style.display = 'block';
+            contentEl.innerHTML = '';
+            
+            try {
+                const [statsResponse, analyticsResponse] = await Promise.all([
+                    apiCall('/api/stats'),
+                    apiCall('/api/analytics')
+                ]);
+                
+                stats = statsResponse.stats || {};
+                const analytics = analyticsResponse.analytics || {};
+                
+                loadingEl.style.display = 'none';
+                
+                contentEl.innerHTML = `
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-number">${stats.total_posts || 0}</div>
+                            <div class="stat-label">Total Posts</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number">${stats.pending_posts || 0}</div>
+                            <div class="stat-label">Pending</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number">${stats.posted_count || 0}</div>
+                            <div class="stat-label">Posted</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number">${stats.post_rate || 0}%</div>
+                            <div class="stat-label">Post Rate</div>
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="card-title">Performance Summary</div>
+                        <div class="card-content">
+                            <div style="margin-bottom: 8px;">
+                                <strong>Total Posts:</strong> ${stats.total_posts || 0}
+                            </div>
+                            <div style="margin-bottom: 8px;">
+                                <strong>Posted:</strong> ${stats.posted_count || 0} (${stats.post_rate || 0}%)
+                            </div>
+                            <div style="margin-bottom: 8px;">
+                                <strong>Deleted:</strong> ${stats.deleted_count || 0} (${stats.delete_rate || 0}%)
+                            </div>
+                            <div style="margin-bottom: 8px;">
+                                <strong>Archived:</strong> ${stats.archived_count || 0}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="card-title">Export Data</div>
+                        <div class="card-content">
+                            <button class="btn" onclick="exportData('json')">Export JSON</button>
+                            <button class="btn btn-outline" onclick="exportData('csv')">Export CSV</button>
+                        </div>
+                    </div>
+                `;
+            } catch (error) {
+                loadingEl.style.display = 'none';
+                contentEl.innerHTML = `
+                    <div class="error">
+                        <strong>Error loading analytics:</strong> ${error.message}
+                        <br><br>
+                        <button class="btn" onclick="loadAnalytics()">Retry</button>
+                    </div>
+                `;
+            }
+        }
+        
+        // Media rendering for web
+        function renderMediaWeb(post) {
+            if (post.media_path) {
+                // Clean up media path - remove duplicate media/ prefix
+                let mediaPath = post.media_path;
+                if (mediaPath.startsWith('media/')) {
+                    mediaPath = mediaPath.substring(6); // Remove 'media/' prefix
+                }
+                
+                const mediaId = `media-${post.id}`;
+                
+                return `
+                    <div class="media-container">
+                        <div class="media-wrapper" id="${mediaId}">
+                            <div class="media-loading">Loading ${post.media_type}...</div>
+                        </div>
+                    </div>
+                `;
+            } else {
+                return '';
+            }
+        }
+
+        // Load authenticated media
+        async function loadAuthenticatedMedia(postId, mediaPath, mediaType) {
+            const mediaId = `media-${postId}`;
+            const mediaWrapper = document.getElementById(mediaId);
+            
+            if (!mediaWrapper) return;
+            
+            try {
+                const token = localStorage.getItem('jwt_token');
+                if (!token) {
+                    throw new Error('No authentication token');
+                }
+                
+                const mediaUrl = `${apiUrl}/api/media/${mediaPath}`;
+                const response = await fetch(mediaUrl, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const blob = await response.blob();
+                const blobUrl = URL.createObjectURL(blob);
+                
+                let mediaElement = '';
+                if (mediaType === 'photo') {
+                    mediaElement = `
+                        <img src="${blobUrl}" class="post-media" alt="Post media" 
+                             onload="this.style.opacity='1'" 
+                             style="opacity: 0; transition: opacity 0.3s ease;">
+                    `;
+                } else if (mediaType === 'video') {
+                    mediaElement = `
+                        <video src="${blobUrl}" class="post-media" controls preload="metadata" 
+                               onloadeddata="this.style.opacity='1'" 
+                               style="opacity: 0; transition: opacity 0.3s ease;"></video>
+                    `;
+                }
+                
+                mediaWrapper.innerHTML = mediaElement;
+                
+                // Clean up blob URL after a delay to prevent memory leaks
+                setTimeout(() => {
+                    URL.revokeObjectURL(blobUrl);
+                }, 300000); // 5 minutes
+                
+            } catch (error) {
+                console.error(`Failed to load media for post ${postId}:`, error);
+                mediaWrapper.innerHTML = `
+                    <div class="media-error">
+                        <div style="color: #ff5252; font-size: 14px; text-align: center; padding: 20px;">
+                            Failed to load ${mediaType}
+                            <br><small>${error.message}</small>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+        
+        // Save media function
+        async function saveMedia(mediaUrl, mediaType) {
+            try {
+                showMessage(`Downloading ${mediaType}...`, 'info');
+                
+                // Get JWT token for authentication
+                const token = localStorage.getItem('jwt_token');
+                if (!token) {
+                    showMessage('Authentication required. Please login again.', 'error');
+                    return;
+                }
+                
+                // Fetch media with authentication
+                const response = await fetch(mediaUrl, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                // Get the blob data
+                const blob = await response.blob();
+                
+                // Create download link
+                const url = window.URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `osint-${mediaType}-${Date.now()}`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                // Clean up
+                window.URL.revokeObjectURL(url);
+                
+                showMessage(`${mediaType === 'image' ? 'Image' : 'Video'} downloaded successfully`, 'success');
+            } catch (error) {
+                console.error('Failed to save media:', error);
+                showMessage(`Failed to download ${mediaType}: ${error.message}`, 'error');
+            }
+        }
+
+        // Post actions
+        async function postAction(postId, actionType) {
+            try {
+                if (actionType === 'post_twitter') {
+                    // Find the post to get the translated text
+                    const post = confirmedPosts.find(p => p.id === postId) || rejectedPosts.find(p => p.id === postId);
+                    if (post && post.translated_text) {
+                        // Open X (Twitter) intent URL
+                        const tweetText = encodeURIComponent(post.translated_text);
+                        const tweetUrl = `https://x.com/intent/tweet?text=${tweetText}`;
+                        
+                        // Try to open X.com, fallback to twitter.com
+                        try {
+                            window.open(tweetUrl, '_blank');
+                        } catch (error) {
+                            const fallbackUrl = `https://twitter.com/intent/tweet?text=${tweetText}`;
+                            window.open(fallbackUrl, '_blank');
+                        }
+                        
+                        // Mark as posted
+                        const response = await apiCall(`/api/posts/${postId}/action`, {
+                            method: 'POST',
+                            body: JSON.stringify({
+                                action_type: 'post_twitter',
+                                twitter_url: tweetUrl
+                            })
+                        });
+                        
+                        showMessage(response.message, 'success');
+                        loadConfirmedPosts(); // Reload confirmed posts
+                    } else {
+                        showMessage('No translated text available for posting', 'error');
+                    }
+                } else if (actionType === 'reject') {
+                    // Move to rejected tab
+                    const response = await apiCall(`/api/posts/${postId}/action`, {
+                        method: 'POST',
+                        body: JSON.stringify({
+                            action_type: 'reject'
+                        })
+                    });
+                    
+                    showMessage(response.message, 'success');
+                    loadConfirmedPosts();
+                    loadRejectedPosts();
+                } else if (actionType === 'duplicate') {
+                    // Move to rejected tab with duplicate status
+                    const response = await apiCall(`/api/posts/${postId}/action`, {
+                        method: 'POST',
+                        body: JSON.stringify({
+                            action_type: 'archive'
+                        })
+                    });
+                    
+                    showMessage('Post marked as duplicate', 'success');
+                    loadConfirmedPosts();
+                    loadRejectedPosts();
+                } else if (actionType === 'restore') {
+                    // Move back to confirmed tab
+                    const response = await apiCall(`/api/posts/${postId}/action`, {
+                        method: 'POST',
+                        body: JSON.stringify({
+                            action_type: 'approve'
+                        })
+                    });
+                    
+                    showMessage('Post restored to confirmed', 'success');
+                    loadConfirmedPosts();
+                    loadRejectedPosts();
+                } else {
+                    const response = await apiCall(`/api/posts/${postId}/action`, {
+                        method: 'POST',
+                        body: JSON.stringify({
+                            action_type: actionType
+                        })
+                    });
+                    
+                    showMessage(response.message, 'success');
+                    loadConfirmedPosts();
+                    loadRejectedPosts();
+                }
+            } catch (error) {
+                showMessage('Error: ' + error.message, 'error');
+            }
+        }
+        
+        // Export data
+        async function exportData(format) {
+            try {
+                const data = {
+                    timestamp: new Date().toISOString(),
+                    stats: stats,
+                    posts: confirmedPosts // Export confirmed posts
+                };
+                
+                let content, filename;
+                
+                if (format === 'json') {
+                    content = JSON.stringify(data, null, 2);
+                    filename = `osint-data-${new Date().toISOString().split('T')[0]}.json`;
+                } else if (format === 'csv') {
+                    content = 'Channel,Date,Status,Text\n' + 
+                        confirmedPosts.map(p => `"${p.channel_name}","${p.created_at}","${p.status}","${p.original_text.replace(/"/g, '""')}"`).join('\n');
+                    filename = `osint-posts-${new Date().toISOString().split('T')[0]}.csv`;
+                }
+                
+                const blob = new Blob([content], { type: 'text/plain' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                a.click();
+                URL.revokeObjectURL(url);
+                
+                showMessage('Data exported successfully!', 'success');
+            } catch (error) {
+                showMessage('Export error: ' + error.message, 'error');
+            }
+        }
+        
+        // Settings
+        function updateApiUrl() {
+            const newUrl = document.getElementById('api-url-input').value.trim();
+            if (newUrl) {
+                apiUrl = newUrl;
+                document.getElementById('current-api-url').textContent = newUrl;
+                localStorage.setItem('apiUrl', newUrl);
+                showMessage('API URL updated successfully!', 'success');
+                testConnection();
+            }
+        }
+        
+        // Logout function
+        function logout() {
+            localStorage.removeItem('jwt_token');
+            showMessage('Logged out successfully!', 'success');
+            setTimeout(() => {
+                window.location.href = '../../test-login.html';
+            }, 1000);
+        }
+        
+        async function testConnection() {
+            const statusEl = document.getElementById('connection-status');
+            statusEl.textContent = 'Testing...';
+            
+            try {
+                const response = await apiCall('/api/health');
+                statusEl.textContent = 'Connected ✓';
+                statusEl.style.color = '#4caf50';
+                showMessage('Connection successful!', 'success');
+            } catch (error) {
+                statusEl.textContent = 'Connection failed ✗';
+                statusEl.style.color = '#f44336';
+                showMessage('Connection failed: ' + error.message, 'error');
+            }
+        }
+        
+        // Utilities
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        }
+        
+        function showMessage(message, type) {
+            const messageEl = document.createElement('div');
+            messageEl.className = type;
+            messageEl.textContent = message;
+            messageEl.style.position = 'fixed';
+            messageEl.style.top = '20px';
+            messageEl.style.left = '50%';
+            messageEl.style.transform = 'translateX(-50%)';
+            messageEl.style.zIndex = '1000';
+            messageEl.style.maxWidth = '90%';
+            
+            document.body.appendChild(messageEl);
+            
+            setTimeout(() => {
+                messageEl.remove();
+            }, 3000);
+        }
+        
+        // Dark theme color palette
+        const colorPalette = {
+            primary: '#2196F3',
+            primaryDark: '#1976D2',
+            secondary: '#FF9800',
+            accent: '#4CAF50',
+            background: '#121212',
+            surface: '#1e1e1e',
+            text: '#ffffff',
+            textSecondary: '#cccccc'
+        };
+
+        // Apply color palette to the app
+        function applyColorPalette() {
+            const root = document.documentElement;
+            root.style.setProperty('--primary-color', colorPalette.primary);
+            root.style.setProperty('--primary-dark-color', colorPalette.primaryDark);
+            root.style.setProperty('--secondary-color', colorPalette.secondary);
+            root.style.setProperty('--accent-color', colorPalette.accent);
+            root.style.setProperty('--background-color', colorPalette.background);
+            root.style.setProperty('--surface-color', colorPalette.surface);
+            root.style.setProperty('--text-color', colorPalette.text);
+            root.style.setProperty('--text-secondary-color', colorPalette.textSecondary);
+        }
+
+        // Apply fixed dark theme colors
+        function applyDarkTheme() {
+            applyColorPalette();
+            console.log('Applied dark theme colors');
+        }
+
+        // Initialize dark theme
+        applyDarkTheme();
+
+        // Check authentication
+        function checkAuth() {
+            const token = localStorage.getItem('jwt_token');
+            if (!token) {
+                // Redirect to login if no token
+                window.location.href = '../../test-login.html';
+                return false;
+            }
+            return true;
+        }
+
+        // Initialize app
+        function initializeApp() {
+            if (!checkAuth()) {
+                return;
+            }
+            
+            // Load saved settings
+            const savedApiUrl = localStorage.getItem('apiUrl');
+            if (savedApiUrl) {
+                apiUrl = savedApiUrl;
+                document.getElementById('api-url-input').value = savedApiUrl;
+                document.getElementById('current-api-url').textContent = savedApiUrl;
+            }
+            
+            // Load initial data
+            loadConfirmedPosts();
+        }
+
+        // Start the app
+        initializeApp();
+    </script>
+</body>
+</html> 
