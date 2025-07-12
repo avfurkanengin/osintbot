@@ -23,7 +23,24 @@ def get_session_file():
             session_b64 = ''.join(session_parts)
             print(f"✅ Reconstructed session from {len(session_parts)} parts")
     
-    # Check if we're in Railway deployment (SESSION_B64 exists and is valid)
+    # Try to load session from repository files (GitHub deployment)
+    if not session_b64:
+        try:
+            session_parts = []
+            for i in range(1, 10):  # Check session_part_1.txt, session_part_2.txt, etc.
+                part_file = f"session_part_{i}.txt"
+                if os.path.exists(part_file):
+                    with open(part_file, 'r') as f:
+                        session_parts.append(f.read().strip())
+                else:
+                    break
+            if session_parts:
+                session_b64 = ''.join(session_parts)
+                print(f"✅ Loaded session from {len(session_parts)} repository files")
+        except Exception as e:
+            print(f"❌ Error loading session from repository files: {e}")
+    
+    # Check if we have a valid session (from env vars or files)
     if session_b64 and len(session_b64) > 100:  # Base64 should be long
         # Decode base64 session for Railway deployment
         try:
@@ -32,10 +49,10 @@ def get_session_file():
             temp_session = tempfile.NamedTemporaryFile(delete=False, suffix='.session')
             temp_session.write(session_data)
             temp_session.close()
-            print(f"✅ Using Railway session file: {temp_session.name}")
+            print(f"✅ Using decoded session file: {temp_session.name}")
             return temp_session.name
         except Exception as e:
-            print(f"❌ Error decoding Railway session: {e}")
+            print(f"❌ Error decoding session: {e}")
             print("🔄 Falling back to local session file")
     
     # Local development - use the existing session file
