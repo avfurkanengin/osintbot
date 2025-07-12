@@ -162,12 +162,12 @@ def process_channel(client, channel, info, sent_hashes):
             print(f"[DUPLICATE] Post already exists in database: {message_id}")
             continue
 
-        # Check if message is too recent (within last 5 minutes) to prevent rapid processing
+        # Check if message is too recent (within last 1 minute) to prevent rapid processing
         message_date = message.date
         if message_date:
             now = datetime.now(tz=message_date.tzinfo) if message_date.tzinfo else datetime.now()
             time_diff = now - message_date
-            if time_diff.total_seconds() < 300:  # 5 minutes
+            if time_diff.total_seconds() < 60:  # 1 minute
                 print(f"[SKIP] Message too recent ({time_diff.total_seconds():.0f}s ago), skipping to prevent duplicates")
                 continue
 
@@ -279,9 +279,9 @@ def process_channel(client, channel, info, sent_hashes):
             
             log_gpt_interaction(CSV_FILE, "Final", datetime.now().strftime("%Y-%m-%d %H:%M"), channel, cleaned, True, usage)
 
-            # Add longer delay to prevent rapid duplicate processing
-            print("[WAIT] Waiting 30 seconds before processing next message...")
-            time.sleep(30)
+            # Add delay to prevent rapid duplicate processing
+            print("[WAIT] Waiting 10 seconds before processing next message...")
+            time.sleep(10)
             return True  # Indicate a new message was processed
         else:
             print("[WARN] Failed to save post to database or duplicate detected")

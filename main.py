@@ -80,8 +80,8 @@ def main():
     print("🚀 Bot çalışmaya başladı. Kanallar taranıyor...\n")
     
     # Add a startup delay to prevent immediate processing
-    print("[STARTUP] Waiting 10 seconds before first scan...")
-    time.sleep(10)
+    print("[STARTUP] Waiting 5 seconds before first scan...")
+    time.sleep(5)
     
     while True:
         try:
@@ -95,8 +95,8 @@ def main():
                     if process_channel(client, channel, info, sent_hashes):
                         new_messages += 1
                         # Add delay between channels to prevent rapid processing
-                        print(f"[WAIT] Processed channel {channel}, waiting 10 seconds...")
-                        time.sleep(10)
+                        print(f"[WAIT] Processed channel {channel}, waiting 5 seconds...")
+                        time.sleep(5)
 
             if new_messages == 0:
                 print("[INFO] Yeni mesaj bulunamadı.")
