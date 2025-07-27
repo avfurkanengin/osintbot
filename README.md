@@ -155,7 +155,7 @@ Based on real-world usage:
 **Furkan Engin**  
 [🌐 furkanengin.av.tr](https://furkanengin.av.tr) | [LinkedIn](https://linkedin.com/in/furkanengin) | [Twitter](https://twitter.com/furkanengin)
 
-> "Law is code. But even code needs law."
+
 
 ---
 
